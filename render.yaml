@@ -1,0 +1,44 @@
+services:
+  # Backend API Service
+  - type: web
+    name: aurabyshenoi-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: ARTIST_EMAIL
+        value: aurabyshenoi@gmail.com
+      - key: CORS_ORIGIN
+        value: https://aurabyshenoi.netlify.app,https://aurabyshenoi.com
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+
+databases:
+  # MongoDB Database
+  - name: aurabyshenoi-mongodb
+    plan: free
+    region: oregon
