@@ -74,19 +74,19 @@ const Footer: React.FC = () => {
             {/* Quick Links */}
             <nav className="space-y-2" role="navigation" aria-label="Footer navigation">
               <button 
-                onClick={() => window.history.pushState({ page: 'gallery' }, '', '/gallery') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'gallery' } }))}
+                onClick={() => { window.history.pushState({ page: 'gallery' }, '', '/gallery'); window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'gallery' } })); }}
                 className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm text-left w-full"
               >
                 View Gallery
               </button>
               <button 
-                onClick={() => window.history.pushState({ page: 'about' }, '', '/about') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'about' } }))}
+                onClick={() => { window.history.pushState({ page: 'about' }, '', '/about'); window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'about' } })); }}
                 className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm text-left w-full"
               >
                 About the Artist
               </button>
               <button 
-                onClick={() => window.history.pushState({ page: 'contact' }, '', '/contact') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'contact' } }))}
+                onClick={() => { window.history.pushState({ page: 'contact' }, '', '/contact'); window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'contact' } })); }}
                 className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm text-left w-full"
               >
                 Commission Work
@@ -129,13 +129,13 @@ const Footer: React.FC = () => {
           </p>
           <div className="flex space-x-6 text-sm">
             <button 
-              onClick={() => window.history.pushState({ page: 'privacy' }, '', '/privacy') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'privacy' } }))}
+              onClick={() => { window.history.pushState({ page: 'privacy' }, '', '/privacy'); window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'privacy' } })); }}
               className="text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm"
             >
               Privacy Policy
             </button>
             <button 
-              onClick={() => window.history.pushState({ page: 'terms' }, '', '/terms') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'terms' } }))}
+              onClick={() => { window.history.pushState({ page: 'terms' }, '', '/terms'); window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'terms' } })); }}
               className="text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm"
             >
               Terms of Service

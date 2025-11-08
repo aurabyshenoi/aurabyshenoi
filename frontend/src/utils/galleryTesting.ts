@@ -120,15 +120,15 @@ export class GalleryTester {
     // Test transform support
     results.push({
       testName: 'CSS Transform Support',
-      passed: this.browserCompat.isSupported('transforms'),
-      message: `Transform support: ${this.browserCompat.isSupported('transforms')}`
+      passed: this.browserCompat.isSupported('transform' as any),
+      message: `Transform support: ${this.browserCompat.isSupported('transform' as any)}`
     });
 
     // Test transition support
     results.push({
       testName: 'CSS Transition Support',
-      passed: this.browserCompat.isSupported('transitions'),
-      message: `Transition support: ${this.browserCompat.isSupported('transitions')}`
+      passed: this.browserCompat.isSupported('transition' as any),
+      message: `Transition support: ${this.browserCompat.isSupported('transition' as any)}`
     });
 
     // Test gallery item hover styles

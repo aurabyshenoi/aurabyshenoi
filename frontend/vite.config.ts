@@ -14,40 +14,9 @@ export default defineConfig({
     // Enable code splitting with optimized chunks
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Vendor chunk for React and core libraries
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor-react';
-            }
-
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-            if (id.includes('cloudinary')) {
-              return 'vendor-cloudinary';
-            }
-            // Other vendor libraries
-            return 'vendor-misc';
-          }
-          
-          // Admin components chunk
-          if (id.includes('/components/Admin') || 
-              id.includes('/components/PaintingManager') ||
-              id.includes('/components/OrderManager') ||
-              id.includes('/components/ImageUploader')) {
-            return 'admin';
-          }
-          
-          // Gallery components chunk
-          if (id.includes('/components/Gallery') ||
-              id.includes('/components/PaintingGrid') ||
-              id.includes('/components/PaintingCard') ||
-              id.includes('/components/PaintingModal')) {
-            return 'gallery';
-          }
-          
-
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react/jsx-runtime'],
+          'vendor-misc': ['lucide-react'],
         },
       },
     },

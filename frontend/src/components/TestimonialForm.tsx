@@ -153,10 +153,8 @@ export const TestimonialForm: React.FC<TestimonialFormProps> = ({
               Customer Photo *
             </label>
             <ImageUploader
-              onImagesUploaded={handleImageUpload}
-              maxImages={1}
-              existingImages={uploadedImages}
-              className="w-full"
+              images={{ thumbnail: uploadedImages[0] || '', fullSize: uploadedImages }}
+              onChange={(imgs) => handleImageUpload(imgs.fullSize)}
             />
             <p className="mt-2 text-sm text-gray-500">
               Upload a photo of the customer. Recommended size: 200x200px or larger, square aspect ratio.
