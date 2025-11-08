@@ -162,10 +162,10 @@ export const boundCardPresets = {
     mass: 0.8          // Lighter feel for artwork cards
   },
   gallery: {
-    strength: 0.18,    // Very subtle for gallery browsing
-    damping: 0.88,     // Maximum control for professional feel
-    stiffness: 420,    // Quick response without overshoot
-    mass: 0.7          // Light, airy feel
+    strength: 0.05,    // Minimal movement for stable layout
+    damping: 0.95,     // Maximum damping for minimal motion
+    stiffness: 500,    // High stiffness for quick settling
+    mass: 0.5          // Light for minimal inertia
   }
 };
 
@@ -193,11 +193,11 @@ export const hoverEffectPresets = {
     translateY: -4     // More pronounced upward movement
   },
   gallery: {
-    scale: 1.02,       // Consistent gentle scale for gallery view
-    elevation: 5,      // Moderate elevation
-    transition: '0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-    shadowIntensity: 0.14,
-    translateY: -2.5   // Subtle upward movement
+    scale: 1.01,       // Minimal scale for stable layout
+    elevation: 3,      // Minimal elevation
+    transition: '0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    shadowIntensity: 0.08,
+    translateY: -1     // Minimal upward movement
   }
 };
 

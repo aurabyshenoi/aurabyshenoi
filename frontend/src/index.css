@@ -788,29 +788,31 @@ ry Gallery Animations */
   }
 }
 
-/* Animation classes */
+/* Animation classes - DISABLED for stable layout */
 .animate-fade-in-up {
-  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .animate-slide-in-left {
-  animation: slideInFromLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 1;
+  transform: translateX(0) scale(1);
 }
 
 .animate-slide-in-right {
-  animation: slideInFromRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 1;
+  transform: translateX(0) scale(1);
 }
 
-/* Staggered animation states */
+/* Staggered animation states - DISABLED for stable layout */
 .masonry-card-hidden {
-  opacity: 0;
-  transform: translateY(30px) scale(0.95);
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .masonry-card-visible {
   opacity: 1;
   transform: translateY(0) scale(1);
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ===== RESPONSIVE MASONRY GALLERY STYLES ===== */

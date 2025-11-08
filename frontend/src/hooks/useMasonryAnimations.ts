@@ -32,52 +32,10 @@ const useMasonryAnimations = (
 
   // Initialize intersection observer
   useEffect(() => {
-    // Check if user prefers reduced motion
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    
-    if (prefersReducedMotion) {
-      // If user prefers reduced motion, make all cards visible immediately
-      setVisibleCards(new Set(Array.from({ length: totalCards }, (_, i) => i)));
-      return;
-    }
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = parseInt(entry.target.getAttribute('data-card-index') || '0');
-            setVisibleCards(prev => new Set([...prev, index]));
-            
-            // Unobserve the element once it's visible to improve performance
-            observerRef.current?.unobserve(entry.target);
-            
-            // Clean up will-change after animation completes
-            const element = entry.target as HTMLElement;
-            setTimeout(() => {
-              element.classList.add('animation-complete');
-            }, 600); // Match animation duration
-          }
-        });
-      },
-      {
-        threshold: config.threshold,
-        rootMargin: config.rootMargin
-      }
-    );
-
-    // Observe any existing elements
-    cardElementsRef.current.forEach((element) => {
-      if (observerRef.current) {
-        observerRef.current.observe(element);
-      }
-    });
-
-    return () => {
-      observerRef.current?.disconnect();
-      // Clean up element references
-      cardElementsRef.current.clear();
-    };
-  }, [totalCards, config.threshold, config.rootMargin]);
+    // Disable animations - make all cards visible immediately for stable layout
+    setVisibleCards(new Set(Array.from({ length: totalCards }, (_, i) => i)));
+    return;
+  }, [totalCards]);
 
   // Register a card element for observation
   const registerCard = useCallback((element: HTMLElement | null, index: number) => {
@@ -95,10 +53,10 @@ const useMasonryAnimations = (
     }
   }, []);
 
-  // Get animation delay for a specific card
+  // Get animation delay for a specific card - disabled for stable layout
   const getAnimationDelay = useCallback((index: number): number => {
-    return visibleCards.has(index) ? index * config.staggerDelay : 0;
-  }, [visibleCards, config.staggerDelay]);
+    return 0;
+  }, []);
 
   // Check if a card is visible
   const isCardVisible = useCallback((index: number): boolean => {
