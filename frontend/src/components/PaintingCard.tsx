@@ -1,26 +1,15 @@
 import React from 'react';
 import { Painting } from '../types/painting';
-import AddToCartButton from './AddToCartButton';
 import { OptimizedImage, useResponsiveImageUrls } from './OptimizedImage';
 
 interface PaintingCardProps {
   painting: Painting;
   onClick: (painting: Painting) => void;
+  onInquire?: (painting: Painting) => void;
 }
 
-const PaintingCard: React.FC<PaintingCardProps> = ({ painting, onClick }) => {
+const PaintingCard: React.FC<PaintingCardProps> = ({ painting, onClick, onInquire }) => {
   const imageUrls = useResponsiveImageUrls(painting.images.thumbnail);
-  
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
-
-  const formatDimensions = (dimensions: Painting['dimensions']) => {
-    return `${dimensions.width}" × ${dimensions.height}" ${dimensions.unit}`;
-  };
 
   return (
     <div 
@@ -39,39 +28,24 @@ const PaintingCard: React.FC<PaintingCardProps> = ({ painting, onClick }) => {
         />
       </div>
       
-      <div className="p-4 space-y-2">
-        <h3 className="font-serif text-lg text-text-dark group-hover:text-brown transition-colors duration-200 truncate">
-          {painting.title}
-        </h3>
-        
-        <p className="text-sm text-text-light">
+      <div className="p-6 space-y-3">
+        {/* Only show medium/type tag */}
+        <p className="text-sm text-text-light text-center">
           {painting.medium}
         </p>
         
-        <p className="text-xs text-text-light">
-          {formatDimensions(painting.dimensions)}
-        </p>
-        
-        <div className="flex justify-between items-center pt-2">
-          <span className="font-semibold text-brown text-lg">
-            {formatPrice(painting.price)}
-          </span>
-          
-          {!painting.isAvailable && (
-            <span className="text-xs bg-warm-gray text-text-light px-2 py-1 rounded">
-              Sold
-            </span>
-          )}
-        </div>
-        
-        {/* Add to Cart Button */}
-        <div className="pt-3">
-          <AddToCartButton 
-            painting={painting} 
-            variant="secondary" 
-            size="sm"
-            className="w-full"
-          />
+        {/* Centered, fit-to-text button */}
+        <div className="flex justify-center">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onInquire?.(painting);
+            }}
+            className="bg-sage-green text-white px-6 py-2 rounded-md font-medium hover:bg-sage-green-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-cream"
+            aria-label={`Enquire about ${painting.title}`}
+          >
+            Enquire
+          </button>
         </div>
       </div>
     </div>

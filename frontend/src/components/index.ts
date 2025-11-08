@@ -8,20 +8,19 @@ export { default as FilterBar } from './FilterBar';
 export { default as Gallery } from './Gallery';
 export { default as About } from './About';
 export { default as Homepage } from './Homepage';
-export { default as ShoppingCart } from './ShoppingCart';
 export { default as PerformanceDebugger } from './PerformanceDebugger';
-export { default as CartItem } from './CartItem';
-export { default as AddToCartButton } from './AddToCartButton';
-export { default as CheckoutForm } from './CheckoutForm';
-export { default as CheckoutPage } from './CheckoutPage';
-export { default as PaymentForm } from './PaymentForm';
-export { default as OrderConfirmation } from './OrderConfirmation';
 export { default as ContactPage } from './ContactPage';
 export { default as ContactFormSubmit } from './ContactFormSubmit';
 export { default as ContactSuccess } from './ContactSuccess';
 export { default as TestimonialCard } from './TestimonialCard';
 export { default as TestimonialCarousel } from './TestimonialCarousel';
 export { default as TestimonialSection } from './TestimonialSection';
+export { default as PrivacyPolicy } from './PrivacyPolicy';
+export { default as TermsOfService } from './TermsOfService';
+
+// Masonry Gallery Components
+export { default as MasonryGallery } from './MasonryGallery';
+export { default as BoundArtworkCard } from './BoundArtworkCard';
 
 // Admin Components
 export { AdminLogin } from './AdminLogin';
@@ -32,8 +31,7 @@ export { ProtectedRoute } from './ProtectedRoute';
 export { PaintingManager } from './PaintingManager';
 export { PaintingForm } from './PaintingForm';
 export { ImageUploader } from './ImageUploader';
-export { OrderManager } from './OrderManager';
-export { OrderDetail } from './OrderDetail';
+
 export { TestimonialManager } from './TestimonialManager';
 export { TestimonialForm } from './TestimonialForm';
 export { ContactManager } from './ContactManager';

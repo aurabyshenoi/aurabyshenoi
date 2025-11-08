@@ -1,0 +1,504 @@
+/**
+ * Browser-Specific Optimizations for React Bits Masonry Gallery
+ * Cross-browser compatibility and performance optimizations
+ */
+
+/* ===== CHROME & EDGE (BLINK ENGINE) OPTIMIZATIONS ===== */
+
+.browser-chrome .artwork-bound-card,
+.browser-edge .artwork-bound-card,
+.engine-blink .artwork-bound-card {
+  /* Optimize for Blink's compositing layer creation */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  
+  /* Enable hardware acceleration */
+  will-change: transform, opacity;
+  
+  /* Optimize for Blink's rendering pipeline */
+  contain: layout style paint;
+}
+
+.browser-chrome .artwork-image,
+.browser-edge .artwork-image,
+.engine-blink .artwork-image {
+  /* Optimize image rendering in Blink */
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.browser-chrome .masonry-gallery-container,
+.browser-edge .masonry-gallery-container,
+.engine-blink .masonry-gallery-container {
+  /* Optimize flexbox performance in Blink */
+  contain: layout;
+}
+
+/* Chrome-specific hover optimizations */
+.browser-chrome .artwork-bound-card:hover,
+.browser-edge .artwork-bound-card:hover {
+  /* Use composite layers for smooth hover effects */
+  will-change: transform, box-shadow;
+  transform: translate3d(0, -3px, 0) scale(1.03);
+}
+
+/* ===== FIREFOX (GECKO ENGINE) OPTIMIZATIONS ===== */
+
+.browser-firefox .artwork-bound-card,
+.engine-gecko .artwork-bound-card {
+  /* Firefox-specific optimizations */
+  -moz-backface-visibility: hidden;
+  
+  /* Optimize for Firefox's rendering */
+  transform: translate3d(0, 0, 0);
+  
+  /* Firefox performs better with explicit layer creation */
+  will-change: transform;
+}
+
+.browser-firefox .artwork-image,
+.engine-gecko .artwork-image {
+  /* Firefox image rendering optimizations */
+  image-rendering: -moz-crisp-edges;
+  -moz-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+.browser-firefox .masonry-gallery-container,
+.engine-gecko .masonry-gallery-container {
+  /* Firefox flexbox optimizations */
+  display: -moz-flex;
+  -moz-flex-direction: row;
+}
+
+.browser-firefox .masonry-column,
+.engine-gecko .masonry-column {
+  -moz-flex: 1;
+  display: -moz-flex;
+  -moz-flex-direction: column;
+}
+
+/* Firefox-specific animation optimizations */
+.browser-firefox .artwork-bound-card:hover,
+.engine-gecko .artwork-bound-card:hover {
+  /* Firefox handles transforms differently */
+  transform: translateY(-3px) scale(1.03);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Firefox backdrop-filter fallback */
+.browser-firefox .artwork-bound-card .absolute.inset-0.bg-black\/80:not(.supports-backdrop-filter),
+.engine-gecko .artwork-bound-card .absolute.inset-0.bg-black\/80:not(.supports-backdrop-filter) {
+  background: rgba(58, 58, 58, 0.9);
+  backdrop-filter: none;
+}
+
+/* ===== SAFARI (WEBKIT ENGINE) OPTIMIZATIONS ===== */
+
+.browser-safari .artwork-bound-card,
+.engine-webkit .artwork-bound-card {
+  /* Safari-specific optimizations */
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  
+  /* Safari performs better with explicit GPU layers */
+  -webkit-transform-style: preserve-3d;
+  
+  /* Optimize for Safari's compositing */
+  -webkit-will-change: transform, opacity;
+}
+
+.browser-safari .artwork-image,
+.engine-webkit .artwork-image {
+  /* Safari image rendering optimizations */
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.browser-safari .masonry-gallery-container,
+.engine-webkit .masonry-gallery-container {
+  /* Safari flexbox optimizations */
+  display: -webkit-flex;
+  -webkit-flex-direction: row;
+}
+
+.browser-safari .masonry-column,
+.engine-webkit .masonry-column {
+  -webkit-flex: 1;
+  display: -webkit-flex;
+  -webkit-flex-direction: column;
+}
+
+/* Safari-specific hover effects */
+.browser-safari .artwork-bound-card:hover,
+.engine-webkit .artwork-bound-card:hover {
+  /* Safari handles 3D transforms well */
+  -webkit-transform: translate3d(0, -3px, 0) scale(1.03);
+  transform: translate3d(0, -3px, 0) scale(1.03);
+}
+
+/* Safari backdrop-filter support */
+.browser-safari.supports-backdrop-filter .artwork-bound-card .absolute.inset-0.bg-black\/80,
+.engine-webkit.supports-backdrop-filter .artwork-bound-card .absolute.inset-0.bg-black\/80 {
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* Safari scroll performance */
+.browser-safari .masonry-gallery-container,
+.engine-webkit .masonry-gallery-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== FEATURE-BASED OPTIMIZATIONS ===== */
+
+/* Backdrop filter support */
+.supports-backdrop-filter .artwork-bound-card .absolute.inset-0.bg-black\/80 {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.supports-backdrop-filter .artwork-bound-card .absolute.top-2.right-2,
+.supports-backdrop-filter .artwork-bound-card .absolute.top-2.left-2 {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Will-change support optimizations */
+.supports-will-change .artwork-bound-card {
+  will-change: transform, opacity, box-shadow;
+}
+
+.supports-will-change .artwork-image {
+  will-change: transform;
+}
+
+.supports-will-change .artwork-bound-card:not(:hover):not(:focus) {
+  will-change: auto;
+}
+
+/* Object-fit support */
+.supports-object-fit .artwork-image {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Object-fit fallback for older browsers */
+.no-object-fit .artwork-image {
+  /* Fallback for browsers without object-fit support */
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: none;
+  max-height: none;
+}
+
+/* 3D transforms fallback */
+.no-transforms3d .artwork-bound-card {
+  /* Fallback for browsers without 3D transform support */
+  transform: none;
+}
+
+.no-transforms3d .artwork-bound-card:hover {
+  /* 2D transform fallback */
+  transform: translateY(-3px) scale(1.03);
+}
+
+.no-transforms3d .artwork-image {
+  transform: none;
+}
+
+.no-transforms3d .artwork-bound-card:hover .artwork-image {
+  transform: scale(1.08);
+}
+
+/* Intersection Observer fallback */
+.no-intersection-observer .masonry-card-hidden {
+  /* Show all cards immediately if no Intersection Observer */
+  opacity: 1;
+  transform: none;
+}
+
+.no-intersection-observer .animate-fade-in-up,
+.no-intersection-observer .animate-slide-in-left,
+.no-intersection-observer .animate-slide-in-right {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+/* ===== MOBILE BROWSER OPTIMIZATIONS ===== */
+
+/* iOS Safari optimizations */
+@supports (-webkit-touch-callout: none) {
+  .artwork-bound-card {
+    /* iOS Safari specific optimizations */
+    -webkit-transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000px;
+  }
+  
+  .artwork-image {
+    -webkit-transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+  }
+  
+  /* Disable hover effects on iOS */
+  .artwork-bound-card:hover {
+    transform: none;
+  }
+  
+  /* Enable touch-friendly interactions */
+  .artwork-bound-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Android Chrome optimizations */
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: 0.001dpcm) {
+  .artwork-bound-card {
+    /* Android Chrome specific optimizations */
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  .artwork-image {
+    transform: translateZ(0);
+  }
+}
+
+/* ===== HIGH DPI DISPLAY OPTIMIZATIONS ===== */
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .artwork-image {
+    /* High DPI image rendering */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+  
+  /* Optimize for Retina displays */
+  .artwork-bound-card {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@media (-webkit-min-device-pixel-ratio: 3), (min-resolution: 288dpi) {
+  .artwork-image {
+    /* Ultra high DPI optimizations */
+    image-rendering: pixelated;
+  }
+}
+
+/* ===== PERFORMANCE OPTIMIZATIONS BY DEVICE CAPABILITY ===== */
+
+/* High-performance devices */
+@media (min-width: 1024px) and (min-height: 768px) {
+  .artwork-bound-card {
+    /* Enable full animations on high-performance devices */
+    will-change: transform, box-shadow, opacity;
+  }
+  
+  .artwork-bound-card:hover {
+    transform: translate3d(0, -4px, 0) scale(1.05);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+  }
+  
+  .artwork-bound-card:hover .artwork-image {
+    transform: scale(1.1);
+  }
+}
+
+/* Medium-performance devices */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .artwork-bound-card {
+    /* Moderate animations for medium-performance devices */
+    will-change: transform;
+  }
+  
+  .artwork-bound-card:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+  
+  .artwork-bound-card:hover .artwork-image {
+    transform: scale(1.05);
+  }
+}
+
+/* Low-performance devices */
+@media (max-width: 767px) {
+  .artwork-bound-card {
+    /* Minimal animations for low-performance devices */
+    will-change: auto;
+  }
+  
+  .artwork-bound-card:hover {
+    transform: none;
+  }
+  
+  .artwork-bound-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  .artwork-image {
+    will-change: auto;
+  }
+  
+  .artwork-bound-card:hover .artwork-image {
+    transform: none;
+  }
+}
+
+/* ===== ACCESSIBILITY OPTIMIZATIONS ===== */
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .artwork-bound-card {
+    border: 2px solid currentColor;
+    background: Canvas;
+    color: CanvasText;
+  }
+  
+  .artwork-bound-card:hover,
+  .artwork-bound-card:focus-visible {
+    border-color: Highlight;
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  
+  .artwork-title {
+    color: CanvasText;
+    font-weight: bold;
+  }
+  
+  .artwork-medium,
+  .artwork-dimensions {
+    color: CanvasText;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .artwork-bound-card,
+  .artwork-image,
+  .artwork-info,
+  .masonry-gallery-container {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .artwork-bound-card:hover,
+  .artwork-bound-card:hover .artwork-image {
+    transform: none !important;
+  }
+  
+  .masonry-card-hidden,
+  .masonry-card-visible {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .artwork-bound-card {
+    background-color: #1f2937;
+    color: #f9fafb;
+    border-color: #374151;
+  }
+  
+  .artwork-info {
+    background-color: #1f2937;
+  }
+  
+  .artwork-title {
+    color: #f9fafb;
+  }
+  
+  .artwork-medium,
+  .artwork-dimensions {
+    color: #d1d5db;
+  }
+  
+  .artwork-bound-card .absolute.top-2.right-2 {
+    background: rgba(31, 41, 55, 0.9);
+    color: #f9fafb;
+    border-color: #374151;
+  }
+}
+
+/* ===== PRINT OPTIMIZATIONS ===== */
+
+@media print {
+  .artwork-bound-card {
+    /* Optimize for printing */
+    break-inside: avoid;
+    page-break-inside: avoid;
+    transform: none !important;
+    box-shadow: none !important;
+    border: 1px solid #000;
+    background: white !important;
+  }
+  
+  .artwork-bound-card:hover {
+    transform: none !important;
+  }
+  
+  .artwork-image {
+    transform: none !important;
+    filter: none !important;
+  }
+  
+  .artwork-bound-card .absolute.inset-0.bg-black\/80 {
+    display: none !important;
+  }
+  
+  .masonry-gallery-container {
+    display: block !important;
+    animation: none !important;
+  }
+  
+  .masonry-column {
+    display: block !important;
+    break-inside: avoid;
+  }
+}
+
+/* ===== DEBUGGING UTILITIES (DEVELOPMENT ONLY) ===== */
+
+.debug-browser-info::before {
+  content: attr(data-browser) " " attr(data-version) " (" attr(data-engine) ")";
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.debug-performance::after {
+  content: "FPS: " attr(data-fps) " | Memory: " attr(data-memory) "MB";
+  position: fixed;
+  top: 40px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 9999;
+  pointer-events: none;
+}

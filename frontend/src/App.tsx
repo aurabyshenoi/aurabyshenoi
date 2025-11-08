@@ -1,53 +1,92 @@
 
-import { useState, Suspense, lazy } from 'react';
-import { ShoppingCart, PerformanceDebugger } from './components';
-import { CartProvider, useCart } from './contexts/CartContext';
+import { useState, useEffect, Suspense, lazy } from 'react';
+import { PerformanceDebugger } from './components';
 import { AuthProvider } from './contexts/AuthContext';
+import { getPageFromPath, getPathFromPage, type PageType } from './utils/navigationHelpers';
 
 // Lazy load components for code splitting
 const Gallery = lazy(() => import('./components/Gallery'));
 const About = lazy(() => import('./components/About'));
 const Homepage = lazy(() => import('./components/Homepage'));
-const CheckoutPage = lazy(() => import('./components/CheckoutPage'));
 const ContactPage = lazy(() => import('./components/ContactPage'));
-const AdminApp = lazy(() => import('./components/AdminApp'));
-const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./components/TermsOfService'));
+const AdminApp = lazy(() => import('./components/AdminApp').then(module => ({ default: module.AdminApp })));
+const ProtectedRoute = lazy(() => import('./components/ProtectedRoute').then(module => ({ default: module.ProtectedRoute })));
 
-// Main App component that needs to be inside CartProvider to access cart
+// Main App component
 const AppContent = () => {
-  const [currentPage, setCurrentPage] = useState<'home' | 'gallery' | 'about' | 'contact' | 'checkout' | 'admin'>('home');
-  const { cart, toggleCart } = useCart();
+  const [currentPage, setCurrentPage] = useState<PageType>('home');
+  const [artworkInquiry, setArtworkInquiry] = useState<any>(null);
   
-  const handleCheckout = () => {
-    setCurrentPage('checkout');
+  // Initialize page state from URL on mount
+  useEffect(() => {
+    const path = window.location.pathname;
+    const page = getPageFromPath(path);
+    setCurrentPage(page);
+  }, []);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const page = event.state?.page || getPageFromPath(window.location.pathname);
+      setCurrentPage(page);
+      
+      // Clear artwork inquiry when navigating away from contact page
+      if (page !== 'contact') {
+        setArtworkInquiry(null);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Check if History API is supported
+  const isBrowserHistorySupported = typeof window !== 'undefined' && 'pushState' in window.history;
+
+  // Navigation function that updates both state and URL
+  const navigateToPage = (page: PageType) => {
+    setCurrentPage(page);
+    
+    // Use History API if supported, otherwise fallback to state-only navigation
+    if (isBrowserHistorySupported) {
+      const path = getPathFromPage(page);
+      window.history.pushState({ page }, '', path);
+    } else {
+      // Fallback: Log warning for unsupported browsers
+      console.warn('Browser history API not supported. Navigation will work but browser back/forward buttons may not function correctly.');
+    }
   };
   
   const handleHomePage = () => {
-    setCurrentPage('home');
+    navigateToPage('home');
   };
 
   const handleGalleryPage = () => {
-    setCurrentPage('gallery');
-  };
-  
-  const handleBackToGallery = () => {
-    setCurrentPage('gallery');
+    navigateToPage('gallery');
   };
 
   const handleAboutPage = () => {
-    setCurrentPage('about');
+    navigateToPage('about');
   };
 
   const handleContactPage = () => {
-    setCurrentPage('contact');
+    setArtworkInquiry(null); // Clear artwork inquiry for general contact
+    navigateToPage('contact');
+  };
+
+  const handleArtworkInquiry = (painting: any) => {
+    setArtworkInquiry(painting);
+    navigateToPage('contact');
   };
 
   const handleAdminAccess = () => {
-    setCurrentPage('admin');
+    navigateToPage('admin');
   };
 
   const handleBackFromAdmin = () => {
-    setCurrentPage('home');
+    navigateToPage('home');
   };
   
   // Loading fallback component
@@ -63,48 +102,46 @@ const AppContent = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       {currentPage === 'home' ? (
-        <>
-          <Homepage 
-            onCartClick={toggleCart} 
-            onGalleryClick={handleGalleryPage} 
-            onAboutClick={handleAboutPage}
-            onContactClick={handleContactPage}
-          />
-          <ShoppingCart onCheckout={handleCheckout} />
-        </>
+        <Homepage 
+          onGalleryClick={handleGalleryPage} 
+          onAboutClick={handleAboutPage}
+          onContactClick={handleContactPage}
+        />
       ) : currentPage === 'gallery' ? (
-        <>
-          <Gallery 
-            onAdminAccess={handleAdminAccess} 
-            onAboutClick={handleAboutPage}
-            onHomeClick={handleHomePage}
-            onContactClick={handleContactPage}
-          />
-          <ShoppingCart onCheckout={handleCheckout} />
-        </>
+        <Gallery 
+          onAdminAccess={handleAdminAccess} 
+          onAboutClick={handleAboutPage}
+          onHomeClick={handleHomePage}
+          onContactClick={handleContactPage}
+          onArtworkInquiry={handleArtworkInquiry}
+        />
       ) : currentPage === 'about' ? (
-        <>
-          <About 
-            onCartClick={toggleCart} 
-            onGalleryClick={handleGalleryPage}
-            onHomeClick={handleHomePage}
-            onContactClick={handleContactPage}
-          />
-          <ShoppingCart onCheckout={handleCheckout} />
-        </>
+        <About 
+          onGalleryClick={handleGalleryPage}
+          onHomeClick={handleHomePage}
+          onContactClick={handleContactPage}
+        />
       ) : currentPage === 'contact' ? (
-        <>
-          <ContactPage
-            onHomeClick={handleHomePage}
-            onGalleryClick={handleGalleryPage}
-            onAboutClick={handleAboutPage}
-            onCartClick={toggleCart}
-            cartItemCount={cart.totalItems}
-          />
-          <ShoppingCart onCheckout={handleCheckout} />
-        </>
-      ) : currentPage === 'checkout' ? (
-        <CheckoutPage onBack={handleBackToGallery} />
+        <ContactPage
+          onHomeClick={handleHomePage}
+          onGalleryClick={handleGalleryPage}
+          onAboutClick={handleAboutPage}
+          artworkReference={artworkInquiry}
+        />
+      ) : currentPage === 'privacy' ? (
+        <PrivacyPolicy
+          onHomeClick={handleHomePage}
+          onGalleryClick={handleGalleryPage}
+          onAboutClick={handleAboutPage}
+          onContactClick={handleContactPage}
+        />
+      ) : currentPage === 'terms' ? (
+        <TermsOfService
+          onHomeClick={handleHomePage}
+          onGalleryClick={handleGalleryPage}
+          onAboutClick={handleAboutPage}
+          onContactClick={handleContactPage}
+        />
       ) : (
         <ProtectedRoute>
           <AdminApp />
@@ -125,9 +162,7 @@ const AppContent = () => {
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <AppContent />
-      </CartProvider>
+      <AppContent />
     </AuthProvider>
   );
 }

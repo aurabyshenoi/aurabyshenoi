@@ -1,436 +1,598 @@
-// Performance monitoring utilities
-import { useMemo } from 'react';
+/**
+ * Performance Monitoring and Optimization Utilities
+ * Provides performance testing and optimization for React Bits Masonry Gallery
+ */
 
-interface PerformanceMetrics {
-  name: string;
-  startTime: number;
-  endTime?: number;
-  duration?: number;
-  metadata?: Record<string, any>;
+export interface PerformanceMetrics {
+  renderTime: number;
+  animationFrameRate: number;
+  memoryUsage: number;
+  bundleSize: number;
+  imageLoadTime: number;
+  interactionLatency: number;
+  layoutShiftScore: number;
+  firstContentfulPaint: number;
+  largestContentfulPaint: number;
 }
 
-class PerformanceMonitor {
-  private metrics: Map<string, PerformanceMetrics> = new Map();
-  private observers: PerformanceObserver[] = [];
+export interface PerformanceReport {
+  metrics: PerformanceMetrics;
+  score: number;
+  recommendations: string[];
+  optimizations: string[];
+  warnings: string[];
+}
+
+export interface AnimationPerformanceTest {
+  averageFPS: number;
+  droppedFrames: number;
+  smoothness: number;
+  duration: number;
+  success: boolean;
+}
+
+/**
+ * Performance monitoring class for React Bits Masonry Gallery
+ */
+export class MasonryPerformanceMonitor {
+  private startTime: number = 0;
+  private frameCount: number = 0;
+  private lastFrameTime: number = 0;
+  private animationId: number = 0;
+  private isMonitoring: boolean = false;
+  private performanceObserver?: PerformanceObserver;
+  private metrics: Partial<PerformanceMetrics> = {};
 
   constructor() {
-    this.initializeObservers();
+    this.initializePerformanceObserver();
   }
 
-  private initializeObservers(): void {
-    // Observe navigation timing
+  /**
+   * Initialize Performance Observer for Web Vitals
+   */
+  private initializePerformanceObserver(): void {
     if ('PerformanceObserver' in window) {
+      this.performanceObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          switch (entry.entryType) {
+            case 'paint':
+              if (entry.name === 'first-contentful-paint') {
+                this.metrics.firstContentfulPaint = entry.startTime;
+              }
+              break;
+            case 'largest-contentful-paint':
+              this.metrics.largestContentfulPaint = entry.startTime;
+              break;
+            case 'layout-shift':
+              this.metrics.layoutShiftScore = (this.metrics.layoutShiftScore || 0) + (entry as any).value;
+              break;
+          }
+        }
+      });
+
       try {
-        const navObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach((entry) => {
-            if (entry.entryType === 'navigation') {
-              this.logNavigationMetrics(entry as PerformanceNavigationTiming);
-            }
-          });
-        });
-        navObserver.observe({ entryTypes: ['navigation'] });
-        this.observers.push(navObserver);
-
-        // Observe resource loading
-        const resourceObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach((entry) => {
-            if (entry.entryType === 'resource') {
-              this.logResourceMetrics(entry as PerformanceResourceTiming);
-            }
-          });
-        });
-        resourceObserver.observe({ entryTypes: ['resource'] });
-        this.observers.push(resourceObserver);
-
-        // Observe largest contentful paint
-        const lcpObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1];
-          this.logMetric('largest-contentful-paint', lastEntry.startTime, {
-            element: (lastEntry as any).element?.tagName,
-            url: (lastEntry as any).url,
-          });
-        });
-        lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-        this.observers.push(lcpObserver);
-
-        // Observe first input delay
-        const fidObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach((entry) => {
-            this.logMetric('first-input-delay', entry.processingStart - entry.startTime, {
-              eventType: (entry as any).name,
-            });
-          });
-        });
-        fidObserver.observe({ entryTypes: ['first-input'] });
-        this.observers.push(fidObserver);
+        this.performanceObserver.observe({ entryTypes: ['paint', 'largest-contentful-paint', 'layout-shift'] });
       } catch (error) {
-        console.warn('Performance observers not fully supported:', error);
+        console.warn('Performance Observer not fully supported:', error);
       }
     }
   }
 
-  private logNavigationMetrics(entry: PerformanceNavigationTiming): void {
-    const metrics = {
-      'dns-lookup': entry.domainLookupEnd - entry.domainLookupStart,
-      'tcp-connection': entry.connectEnd - entry.connectStart,
-      'tls-negotiation': entry.secureConnectionStart > 0 ? entry.connectEnd - entry.secureConnectionStart : 0,
-      'request-response': entry.responseEnd - entry.requestStart,
-      'dom-processing': entry.domContentLoadedEventEnd - entry.responseEnd,
-      'resource-loading': entry.loadEventEnd - entry.domContentLoadedEventEnd,
-      'total-load-time': entry.loadEventEnd - entry.navigationStart,
-    };
+  /**
+   * Start performance monitoring
+   */
+  startMonitoring(): void {
+    if (this.isMonitoring) return;
 
-    Object.entries(metrics).forEach(([name, duration]) => {
-      this.logMetric(`navigation-${name}`, duration);
-    });
+    this.isMonitoring = true;
+    this.startTime = performance.now();
+    this.frameCount = 0;
+    this.lastFrameTime = this.startTime;
+    
+    this.monitorFrameRate();
+    this.measureMemoryUsage();
   }
 
-  private logResourceMetrics(entry: PerformanceResourceTiming): void {
-    // Only log image resources for now
-    if (entry.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-      this.logMetric('image-load-time', entry.responseEnd - entry.startTime, {
-        url: entry.name,
-        size: entry.transferSize,
-        cached: entry.transferSize === 0,
-      });
-    }
-  }
+  /**
+   * Stop performance monitoring
+   */
+  stopMonitoring(): PerformanceMetrics {
+    if (!this.isMonitoring) return this.getDefaultMetrics();
 
-  // Start timing a custom metric
-  startTiming(name: string, metadata?: Record<string, any>): void {
-    this.metrics.set(name, {
-      name,
-      startTime: performance.now(),
-      metadata,
-    });
-  }
-
-  // End timing a custom metric
-  endTiming(name: string): number | null {
-    const metric = this.metrics.get(name);
-    if (!metric) {
-      console.warn(`No timing started for metric: ${name}`);
-      return null;
+    this.isMonitoring = false;
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
     }
 
     const endTime = performance.now();
-    const duration = endTime - metric.startTime;
+    const totalTime = endTime - this.startTime;
+    
+    this.metrics.renderTime = totalTime;
+    this.metrics.animationFrameRate = this.frameCount / (totalTime / 1000);
 
-    metric.endTime = endTime;
-    metric.duration = duration;
-
-    this.logMetric(name, duration, metric.metadata);
-    this.metrics.delete(name);
-
-    return duration;
+    return this.getMetrics();
   }
 
-  // Log a metric directly
-  logMetric(name: string, value: number, metadata?: Record<string, any>): void {
-    const metric = {
-      name,
-      value,
-      timestamp: Date.now(),
-      metadata,
+  /**
+   * Monitor frame rate during animations
+   */
+  private monitorFrameRate(): void {
+    const measureFrame = (currentTime: number) => {
+      if (!this.isMonitoring) return;
+
+      this.frameCount++;
+      this.lastFrameTime = currentTime;
+      this.animationId = requestAnimationFrame(measureFrame);
     };
 
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Performance: ${name} = ${value.toFixed(2)}ms`, metadata);
-    }
+    this.animationId = requestAnimationFrame(measureFrame);
+  }
 
-    // Store in session storage for debugging
-    try {
-      const stored = sessionStorage.getItem('performance-metrics');
-      const metrics = stored ? JSON.parse(stored) : [];
-      metrics.push(metric);
-      
-      // Keep only last 100 metrics
-      if (metrics.length > 100) {
-        metrics.splice(0, metrics.length - 100);
-      }
-      
-      sessionStorage.setItem('performance-metrics', JSON.stringify(metrics));
-    } catch (error) {
-      // Ignore storage errors
+  /**
+   * Measure memory usage
+   */
+  private measureMemoryUsage(): void {
+    if ('memory' in performance) {
+      const memory = (performance as any).memory;
+      this.metrics.memoryUsage = memory.usedJSHeapSize / 1024 / 1024; // MB
     }
   }
 
-  // Get Core Web Vitals
-  getCoreWebVitals(): Promise<{
-    lcp?: number;
-    fid?: number;
-    cls?: number;
-  }> {
+  /**
+   * Get current performance metrics
+   */
+  getMetrics(): PerformanceMetrics {
+    return {
+      renderTime: this.metrics.renderTime || 0,
+      animationFrameRate: this.metrics.animationFrameRate || 0,
+      memoryUsage: this.metrics.memoryUsage || 0,
+      bundleSize: this.metrics.bundleSize || 0,
+      imageLoadTime: this.metrics.imageLoadTime || 0,
+      interactionLatency: this.metrics.interactionLatency || 0,
+      layoutShiftScore: this.metrics.layoutShiftScore || 0,
+      firstContentfulPaint: this.metrics.firstContentfulPaint || 0,
+      largestContentfulPaint: this.metrics.largestContentfulPaint || 0,
+    };
+  }
+
+  /**
+   * Get default metrics when monitoring is not active
+   */
+  private getDefaultMetrics(): PerformanceMetrics {
+    return {
+      renderTime: 0,
+      animationFrameRate: 0,
+      memoryUsage: 0,
+      bundleSize: 0,
+      imageLoadTime: 0,
+      interactionLatency: 0,
+      layoutShiftScore: 0,
+      firstContentfulPaint: 0,
+      largestContentfulPaint: 0,
+    };
+  }
+
+  /**
+   * Test animation performance
+   */
+  async testAnimationPerformance(duration: number = 3000): Promise<AnimationPerformanceTest> {
     return new Promise((resolve) => {
-      const vitals: any = {};
-      let resolveTimeout: NodeJS.Timeout;
+      const startTime = performance.now();
+      let frameCount = 0;
+      let droppedFrames = 0;
+      let lastFrameTime = startTime;
 
-      // Set a timeout to resolve even if not all metrics are available
-      resolveTimeout = setTimeout(() => resolve(vitals), 3000);
-
-      // Get LCP
-      if ('PerformanceObserver' in window) {
-        try {
-          const lcpObserver = new PerformanceObserver((list) => {
-            const entries = list.getEntries();
-            const lastEntry = entries[entries.length - 1];
-            vitals.lcp = lastEntry.startTime;
-            lcpObserver.disconnect();
-            
-            if (vitals.lcp && vitals.fid !== undefined && vitals.cls !== undefined) {
-              clearTimeout(resolveTimeout);
-              resolve(vitals);
-            }
-          });
-          lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-
-          // Get FID
-          const fidObserver = new PerformanceObserver((list) => {
-            const entries = list.getEntries();
-            entries.forEach((entry) => {
-              vitals.fid = entry.processingStart - entry.startTime;
-            });
-            fidObserver.disconnect();
-            
-            if (vitals.lcp && vitals.fid !== undefined && vitals.cls !== undefined) {
-              clearTimeout(resolveTimeout);
-              resolve(vitals);
-            }
-          });
-          fidObserver.observe({ entryTypes: ['first-input'] });
-
-          // Get CLS
-          const clsObserver = new PerformanceObserver((list) => {
-            let clsValue = 0;
-            const entries = list.getEntries();
-            entries.forEach((entry) => {
-              if (!(entry as any).hadRecentInput) {
-                clsValue += (entry as any).value;
-              }
-            });
-            vitals.cls = clsValue;
-            
-            if (vitals.lcp && vitals.fid !== undefined && vitals.cls !== undefined) {
-              clearTimeout(resolveTimeout);
-              resolve(vitals);
-            }
-          });
-          clsObserver.observe({ entryTypes: ['layout-shift'] });
-        } catch (error) {
-          clearTimeout(resolveTimeout);
-          resolve(vitals);
+      const testAnimation = (currentTime: number) => {
+        frameCount++;
+        
+        // Check for dropped frames (> 16.67ms between frames for 60fps)
+        if (currentTime - lastFrameTime > 16.67) {
+          droppedFrames++;
         }
-      } else {
-        clearTimeout(resolveTimeout);
-        resolve(vitals);
-      }
+        
+        lastFrameTime = currentTime;
+
+        if (currentTime - startTime < duration) {
+          requestAnimationFrame(testAnimation);
+        } else {
+          const totalTime = currentTime - startTime;
+          const averageFPS = frameCount / (totalTime / 1000);
+          const smoothness = Math.max(0, 100 - (droppedFrames / frameCount) * 100);
+
+          resolve({
+            averageFPS,
+            droppedFrames,
+            smoothness,
+            duration: totalTime,
+            success: averageFPS >= 30 && smoothness >= 80
+          });
+        }
+      };
+
+      requestAnimationFrame(testAnimation);
     });
   }
 
-  // Get stored metrics
-  getStoredMetrics(): any[] {
+  /**
+   * Measure image loading performance
+   */
+  async measureImageLoadTime(imageUrls: string[]): Promise<number> {
+    const startTime = performance.now();
+    
+    const loadPromises = imageUrls.map(url => {
+      return new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => reject();
+        img.src = url;
+      });
+    });
+
     try {
-      const stored = sessionStorage.getItem('performance-metrics');
-      return stored ? JSON.parse(stored) : [];
+      await Promise.all(loadPromises);
+      const endTime = performance.now();
+      this.metrics.imageLoadTime = endTime - startTime;
+      return this.metrics.imageLoadTime;
     } catch (error) {
-      return [];
+      console.warn('Some images failed to load during performance test');
+      return performance.now() - startTime;
     }
   }
 
-  // Clear stored metrics
-  clearStoredMetrics(): void {
-    try {
-      sessionStorage.removeItem('performance-metrics');
-    } catch (error) {
-      // Ignore storage errors
-    }
+  /**
+   * Measure interaction latency
+   */
+  measureInteractionLatency(element: HTMLElement): Promise<number> {
+    return new Promise((resolve) => {
+      const startTime = performance.now();
+      
+      const handleClick = () => {
+        const endTime = performance.now();
+        const latency = endTime - startTime;
+        this.metrics.interactionLatency = latency;
+        element.removeEventListener('click', handleClick);
+        resolve(latency);
+      };
+
+      element.addEventListener('click', handleClick);
+      
+      // Simulate click after a short delay
+      setTimeout(() => {
+        element.click();
+      }, 10);
+    });
   }
 
-  // Cleanup observers
+  /**
+   * Cleanup performance observer
+   */
   cleanup(): void {
-    this.observers.forEach(observer => observer.disconnect());
-    this.observers = [];
-    this.metrics.clear();
+    if (this.performanceObserver) {
+      this.performanceObserver.disconnect();
+    }
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+    this.isMonitoring = false;
   }
 }
 
-// Create singleton instance
-export const performanceMonitor = new PerformanceMonitor();
+/**
+ * Test masonry gallery performance
+ */
+export const testMasonryGalleryPerformance = async (
+  galleryElement: HTMLElement,
+  imageUrls: string[] = []
+): Promise<PerformanceReport> => {
+  const monitor = new MasonryPerformanceMonitor();
+  const recommendations: string[] = [];
+  const optimizations: string[] = [];
+  const warnings: string[] = [];
 
-// React hook for performance monitoring
-export const usePerformanceMonitor = () => {
-  return useMemo(() => ({
-    startTiming: performanceMonitor.startTiming.bind(performanceMonitor),
-    endTiming: performanceMonitor.endTiming.bind(performanceMonitor),
-    logMetric: performanceMonitor.logMetric.bind(performanceMonitor),
-    getCoreWebVitals: performanceMonitor.getCoreWebVitals.bind(performanceMonitor),
-    getStoredMetrics: performanceMonitor.getStoredMetrics.bind(performanceMonitor),
-    clearStoredMetrics: performanceMonitor.clearStoredMetrics.bind(performanceMonitor),
-  }), []);
+  try {
+    // Start monitoring
+    monitor.startMonitoring();
+
+    // Test animation performance
+    const animationTest = await monitor.testAnimationPerformance(2000);
+    
+    // Test image loading if URLs provided
+    if (imageUrls.length > 0) {
+      await monitor.measureImageLoadTime(imageUrls);
+    }
+
+    // Test interaction latency
+    if (galleryElement) {
+      const firstCard = galleryElement.querySelector('.artwork-bound-card') as HTMLElement;
+      if (firstCard) {
+        await monitor.measureInteractionLatency(firstCard);
+      }
+    }
+
+    // Stop monitoring and get metrics
+    const metrics = monitor.stopMonitoring();
+
+    // Calculate performance score
+    let score = 100;
+    
+    // Deduct points for poor performance
+    if (animationTest.averageFPS < 30) {
+      score -= 30;
+      warnings.push('Low frame rate detected during animations');
+      recommendations.push('Consider reducing animation complexity or enabling hardware acceleration');
+    }
+    
+    if (animationTest.smoothness < 80) {
+      score -= 20;
+      warnings.push('Animation smoothness below optimal threshold');
+      recommendations.push('Optimize CSS transforms and reduce will-change usage');
+    }
+    
+    if (metrics.memoryUsage > 50) {
+      score -= 15;
+      warnings.push('High memory usage detected');
+      recommendations.push('Implement image lazy loading and cleanup unused resources');
+    }
+    
+    if (metrics.imageLoadTime > 2000) {
+      score -= 15;
+      warnings.push('Slow image loading performance');
+      recommendations.push('Optimize image sizes and implement progressive loading');
+    }
+    
+    if (metrics.interactionLatency > 100) {
+      score -= 10;
+      warnings.push('High interaction latency');
+      recommendations.push('Optimize event handlers and reduce JavaScript execution time');
+    }
+    
+    if (metrics.layoutShiftScore > 0.1) {
+      score -= 10;
+      warnings.push('Layout shift detected');
+      recommendations.push('Set explicit dimensions for images and containers');
+    }
+
+    // Add optimizations based on good performance
+    if (animationTest.averageFPS >= 60) {
+      optimizations.push('Excellent frame rate achieved');
+    }
+    
+    if (animationTest.smoothness >= 95) {
+      optimizations.push('Smooth animations detected');
+    }
+    
+    if (metrics.memoryUsage < 20) {
+      optimizations.push('Efficient memory usage');
+    }
+    
+    if (metrics.interactionLatency < 50) {
+      optimizations.push('Fast interaction response');
+    }
+
+    // General recommendations
+    if (score < 80) {
+      recommendations.push('Consider implementing performance optimizations');
+      recommendations.push('Test on lower-end devices for better compatibility');
+    }
+
+    monitor.cleanup();
+
+    return {
+      metrics,
+      score: Math.max(0, score),
+      recommendations,
+      optimizations,
+      warnings
+    };
+
+  } catch (error) {
+    monitor.cleanup();
+    throw new Error(`Performance test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
-// Utility functions for common performance measurements
-export const measureImageLoad = (src: string): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    const startTime = performance.now();
-    const img = new Image();
-    
-    img.onload = () => {
-      const loadTime = performance.now() - startTime;
-      performanceMonitor.logMetric('image-load', loadTime, { src });
-      resolve(loadTime);
-    };
-    
-    img.onerror = () => {
-      const loadTime = performance.now() - startTime;
-      performanceMonitor.logMetric('image-load-error', loadTime, { src });
-      reject(new Error(`Failed to load image: ${src}`));
-    };
-    
-    img.src = src;
+/**
+ * Optimize bundle size by analyzing imports
+ */
+export const analyzeBundleSize = (): {
+  estimatedSize: number;
+  recommendations: string[];
+  optimizations: string[];
+} => {
+  const recommendations: string[] = [];
+  const optimizations: string[] = [];
+  
+  // Estimate bundle size based on loaded modules
+  let estimatedSize = 0;
+  
+  // Check for large dependencies
+  if (window.React) {
+    estimatedSize += 42; // React ~42KB gzipped
+    optimizations.push('React loaded efficiently');
+  }
+  
+  if ((window as any).FramerMotion) {
+    estimatedSize += 25; // Framer Motion ~25KB gzipped
+    optimizations.push('Framer Motion loaded for animations');
+  } else {
+    recommendations.push('Consider lazy loading Framer Motion if not immediately needed');
+  }
+  
+  // Check for unused CSS
+  const stylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+  if (stylesheets.length > 3) {
+    recommendations.push('Consider consolidating CSS files to reduce HTTP requests');
+  }
+  
+  // Check for image optimization
+  const images = document.querySelectorAll('img');
+  let unoptimizedImages = 0;
+  images.forEach(img => {
+    if (!img.src.includes('webp') && !img.src.includes('avif')) {
+      unoptimizedImages++;
+    }
   });
+  
+  if (unoptimizedImages > 0) {
+    recommendations.push('Consider using modern image formats (WebP, AVIF) for better compression');
+  }
+  
+  // Bundle size recommendations
+  if (estimatedSize > 100) {
+    recommendations.push('Consider code splitting to reduce initial bundle size');
+    recommendations.push('Implement lazy loading for non-critical components');
+  } else {
+    optimizations.push('Bundle size is within optimal range');
+  }
+
+  return {
+    estimatedSize,
+    recommendations,
+    optimizations
+  };
 };
 
+/**
+ * Test performance on different device types
+ */
+export const testDevicePerformance = async (): Promise<{
+  deviceType: string;
+  performance: 'high' | 'medium' | 'low';
+  recommendations: string[];
+}> => {
+  const recommendations: string[] = [];
+  
+  // Estimate device performance based on available metrics
+  const hardwareConcurrency = navigator.hardwareConcurrency || 1;
+  const memory = (navigator as any).deviceMemory || 1;
+  const connection = (navigator as any).connection;
+  
+  let performanceLevel: 'high' | 'medium' | 'low' = 'medium';
+  let deviceType = 'desktop';
+  
+  // Detect device type
+  if (/Mobi|Android/i.test(navigator.userAgent)) {
+    deviceType = 'mobile';
+  } else if (/Tablet|iPad/i.test(navigator.userAgent)) {
+    deviceType = 'tablet';
+  }
+  
+  // Determine performance level
+  if (hardwareConcurrency >= 8 && memory >= 4) {
+    performanceLevel = 'high';
+  } else if (hardwareConcurrency >= 4 && memory >= 2) {
+    performanceLevel = 'medium';
+  } else {
+    performanceLevel = 'low';
+    recommendations.push('Consider reducing animation complexity for better performance');
+    recommendations.push('Implement aggressive lazy loading');
+    recommendations.push('Reduce the number of simultaneous animations');
+  }
+  
+  // Connection-based recommendations
+  if (connection && connection.effectiveType) {
+    if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
+      recommendations.push('Optimize for slow network connections');
+      recommendations.push('Implement progressive image loading');
+    }
+  }
+  
+  // Device-specific recommendations
+  if (deviceType === 'mobile') {
+    recommendations.push('Optimize touch interactions');
+    recommendations.push('Reduce hover effects for touch devices');
+    recommendations.push('Implement swipe gestures for better mobile UX');
+  }
+  
+  return {
+    deviceType,
+    performance: performanceLevel,
+    recommendations
+  };
+};
+
+/**
+ * Hook for using performance monitoring in React components
+ */
+export const usePerformanceMonitor = () => {
+  const monitor = new MasonryPerformanceMonitor();
+  
+  return {
+    startMonitoring: () => monitor.startMonitoring(),
+    stopMonitoring: () => monitor.stopMonitoring(),
+    getMetrics: () => monitor.getMetrics(),
+    testAnimationPerformance: (duration?: number) => monitor.testAnimationPerformance(duration),
+    measureImageLoadTime: (urls: string[]) => monitor.measureImageLoadTime(urls),
+    measureInteractionLatency: (element: HTMLElement) => monitor.measureInteractionLatency(element),
+    cleanup: () => monitor.cleanup(),
+    getStoredMetrics: () => [], // Placeholder for stored metrics
+    clearStoredMetrics: () => {}, // Placeholder for clearing metrics
+    getCoreWebVitals: async () => ({}) // Placeholder for core web vitals
+  };
+};
+
+/**
+ * Measure API call performance
+ */
 export const measureApiCall = async <T>(
   name: string,
   apiCall: () => Promise<T>
 ): Promise<T> => {
-  performanceMonitor.startTiming(`api-${name}`);
+  const startTime = performance.now();
+  
   try {
     const result = await apiCall();
-    performanceMonitor.endTiming(`api-${name}`);
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    console.log(`API Call "${name}" took ${duration.toFixed(2)}ms`);
+    
     return result;
   } catch (error) {
-    performanceMonitor.endTiming(`api-${name}`);
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    console.error(`API Call "${name}" failed after ${duration.toFixed(2)}ms:`, error);
     throw error;
   }
 };
 
-// Enhanced performance monitoring for production
-export class ProductionPerformanceMonitor {
-  private metricsBuffer: any[] = [];
-  private batchSize = 10;
-  private flushInterval = 30000; // 30 seconds
-  private flushTimer?: NodeJS.Timeout;
-
-  constructor() {
-    this.startBatchFlush();
-    this.monitorMemoryUsage();
-  }
-
-  private startBatchFlush(): void {
-    this.flushTimer = setInterval(() => {
-      this.flushMetrics();
-    }, this.flushInterval);
-  }
-
-  private flushMetrics(): void {
-    if (this.metricsBuffer.length === 0) return;
-
-    // In production, you would send these to your analytics service
-    if (process.env.NODE_ENV === 'production') {
-      // Example: Send to analytics service
-      // this.sendToAnalytics(this.metricsBuffer);
-      console.log('Flushing performance metrics:', this.metricsBuffer.length);
-    }
-
-    this.metricsBuffer = [];
-  }
-
-  logMetric(name: string, value: number, metadata?: Record<string, any>): void {
-    const metric = {
-      name,
-      value,
-      timestamp: Date.now(),
-      url: window.location.pathname,
-      userAgent: navigator.userAgent,
-      metadata,
-    };
-
-    this.metricsBuffer.push(metric);
-
-    // Flush immediately if buffer is full
-    if (this.metricsBuffer.length >= this.batchSize) {
-      this.flushMetrics();
-    }
-  }
-
-  private monitorMemoryUsage(): void {
-    if ('memory' in performance) {
-      setInterval(() => {
-        const memory = (performance as any).memory;
-        this.logMetric('memory-usage', memory.usedJSHeapSize, {
-          totalJSHeapSize: memory.totalJSHeapSize,
-          jsHeapSizeLimit: memory.jsHeapSizeLimit,
-        });
-      }, 60000); // Every minute
-    }
-  }
-
-  cleanup(): void {
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-    }
-    this.flushMetrics(); // Final flush
-  }
-}
-
-// Create production monitor instance
-export const productionMonitor = new ProductionPerformanceMonitor();
-
-// Bundle size analyzer utility
-export const analyzeBundleSize = (): void => {
-  if (process.env.NODE_ENV === 'development') {
-    // Analyze loaded scripts
-    const scripts = Array.from(document.querySelectorAll('script[src]'));
-    const totalSize = scripts.reduce((total, script) => {
-      const src = (script as HTMLScriptElement).src;
-      if (src.includes('chunk') || src.includes('vendor')) {
-        // Estimate size based on typical chunk sizes
-        return total + 100; // KB estimate
-      }
-      return total;
-    }, 0);
-
-    console.log(`Estimated bundle size: ${totalSize}KB`);
-    performanceMonitor.logMetric('bundle-size-estimate', totalSize);
-  }
-};
-
-// Network performance monitoring
-export const monitorNetworkPerformance = (): void => {
-  if ('connection' in navigator) {
-    const connection = (navigator as any).connection;
-    performanceMonitor.logMetric('network-effective-type', 0, {
-      effectiveType: connection.effectiveType,
-      downlink: connection.downlink,
-      rtt: connection.rtt,
-    });
-  }
-};
-
-// Page visibility performance tracking
-export const trackPageVisibility = (): void => {
-  let visibilityStart = Date.now();
-
-  const handleVisibilityChange = () => {
-    if (document.hidden) {
-      const visibleTime = Date.now() - visibilityStart;
-      performanceMonitor.logMetric('page-visible-time', visibleTime);
-    } else {
-      visibilityStart = Date.now();
-    }
-  };
-
-  document.addEventListener('visibilitychange', handleVisibilityChange);
+/**
+ * Log performance test results
+ */
+export const logPerformanceResults = (report: PerformanceReport): void => {
+  console.group('⚡ Performance Test Results');
   
-  // Cleanup function
-  return () => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-  };
+  console.group('📊 Metrics');
+  console.log(`Render Time: ${report.metrics.renderTime.toFixed(2)}ms`);
+  console.log(`Frame Rate: ${report.metrics.animationFrameRate.toFixed(1)} FPS`);
+  console.log(`Memory Usage: ${report.metrics.memoryUsage.toFixed(1)} MB`);
+  console.log(`Image Load Time: ${report.metrics.imageLoadTime.toFixed(2)}ms`);
+  console.log(`Interaction Latency: ${report.metrics.interactionLatency.toFixed(2)}ms`);
+  console.log(`Layout Shift Score: ${report.metrics.layoutShiftScore.toFixed(3)}`);
+  console.log(`First Contentful Paint: ${report.metrics.firstContentfulPaint.toFixed(2)}ms`);
+  console.log(`Largest Contentful Paint: ${report.metrics.largestContentfulPaint.toFixed(2)}ms`);
+  console.groupEnd();
+  
+  console.log(`\n🎯 Performance Score: ${report.score}/100`);
+  
+  if (report.optimizations.length > 0) {
+    console.group('✅ Optimizations');
+    report.optimizations.forEach(opt => console.log(`• ${opt}`));
+    console.groupEnd();
+  }
+  
+  if (report.warnings.length > 0) {
+    console.group('⚠️ Warnings');
+    report.warnings.forEach(warning => console.warn(`• ${warning}`));
+    console.groupEnd();
+  }
+  
+  if (report.recommendations.length > 0) {
+    console.group('💡 Recommendations');
+    report.recommendations.forEach(rec => console.log(`• ${rec}`));
+    console.groupEnd();
+  }
+  
+  console.groupEnd();
 };

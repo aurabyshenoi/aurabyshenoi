@@ -77,49 +77,6 @@ describe('Navigation E2E Tests', () => {
     });
   });
 
-  it('should display cart icon with item count', () => {
-    cy.visit('/');
-    
-    // Verify cart icon is visible
-    cy.get('[data-testid="cart-icon"]').should('be.visible');
-    
-    // Initially should show 0 items
-    cy.get('[data-testid="cart-count"]').should('contain', '0');
-  });
-
-  it('should open cart when cart icon is clicked', () => {
-    cy.visit('/');
-    
-    // Click cart icon
-    cy.get('[data-testid="cart-icon"]').click();
-    
-    // Verify cart modal opens
-    cy.get('[data-testid="shopping-cart"]').should('be.visible');
-    
-    // Verify empty cart message
-    cy.get('[data-testid="shopping-cart"]').should('contain', 'Your cart is empty');
-  });
-
-  it('should close cart when clicking outside or close button', () => {
-    cy.visit('/');
-    
-    // Open cart
-    cy.get('[data-testid="cart-icon"]').click();
-    cy.get('[data-testid="shopping-cart"]').should('be.visible');
-    
-    // Close cart with close button
-    cy.get('[data-testid="cart-close-button"]').click();
-    cy.get('[data-testid="shopping-cart"]').should('not.exist');
-    
-    // Open cart again
-    cy.get('[data-testid="cart-icon"]').click();
-    cy.get('[data-testid="shopping-cart"]').should('be.visible');
-    
-    // Close cart by clicking backdrop
-    cy.get('[data-testid="cart-backdrop"]').click({ force: true });
-    cy.get('[data-testid="shopping-cart"]').should('not.exist');
-  });
-
   it('should maintain navigation state during page transitions', () => {
     // Start on home page
     cy.visit('/');

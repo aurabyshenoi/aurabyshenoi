@@ -625,12 +625,11 @@ describe('ContactFormSubmit', () => {
       const formData = fetchCall[1].body as FormData;
 
       // Verify enhanced FormSubmit.co configuration fields
-      expect(formData.get('_subject')).toBe('🎨 New Contact Form Submission - Jane Smith');
-      expect(formData.get('_template')).toBe('box');
+      expect(formData.get('_subject')).toBe('Contact Form: Jane Smith');
+      expect(formData.get('_template')).toBe('table');
       expect(formData.get('_replyto')).toBe('jane@example.com');
       expect(formData.get('_captcha')).toBe('false');
-      expect(formData.get('_format')).toBe('html');
-      expect(formData.get('_autoresponse')).toBe('Thank you for contacting us! We have received your message and will respond within 24-48 hours.');
+      expect(formData.get('_autoresponse')).toBe('Thank you for contacting us! We will respond within 24-48 hours.');
     });
 
     test('should include custom subject line with customer name interpolation', async () => {
@@ -657,7 +656,7 @@ describe('ContactFormSubmit', () => {
       const formData = fetchCall[1].body as FormData;
 
       // Verify custom subject line includes customer name
-      expect(formData.get('_subject')).toBe('🎨 New Contact Form Submission - John Doe');
+      expect(formData.get('_subject')).toBe('Contact Form: John Doe');
     });
 
     test('should set customer email as reply-to address', async () => {
@@ -711,25 +710,14 @@ describe('ContactFormSubmit', () => {
       const fetchCall = (global.fetch as any).mock.calls[0];
       const formData = fetchCall[1].body as FormData;
 
-      // Verify structured email template content
-      const templateContent = formData.get('_template_content') as string;
+      // Verify form data includes customer information
+      expect(formData.get('name')).toBe('Bob Wilson');
+      expect(formData.get('email')).toBe('bob@example.com');
+      expect(formData.get('phone')).toBe('+1987654321');
+      expect(formData.get('message')).toBe('I am interested in commissioning a custom painting for my office.');
       
-      // Check that template includes customer information with proper labels
-      expect(templateContent).toContain('Bob Wilson');
-      expect(templateContent).toContain('bob@example.com');
-      expect(templateContent).toContain('+1987654321');
-      expect(templateContent).toContain('I am interested in commissioning a custom painting for my office.');
-      
-      // Check for professional formatting elements
-      expect(templateContent).toContain('New Contact Form Submission');
-      expect(templateContent).toContain('Customer Information');
-      expect(templateContent).toContain('Artist Portfolio Website');
-      expect(templateContent).toContain('Reply directly to this email');
-      
-      // Check for HTML structure and styling
-      expect(templateContent).toContain('<div style=');
-      expect(templateContent).toContain('background-color: #8B7355');
-      expect(templateContent).toContain('color: #F5F1E8');
+      // Verify FormSubmit uses built-in table template for better formatting
+      expect(formData.get('_template')).toBe('table');
     });
 
     test('should handle optional phone field in email template', async () => {
@@ -754,13 +742,12 @@ describe('ContactFormSubmit', () => {
 
       const fetchCall = (global.fetch as any).mock.calls[0];
       const formData = fetchCall[1].body as FormData;
-      const templateContent = formData.get('_template_content') as string;
 
-      // Verify template includes customer info but excludes phone row when not provided
-      expect(templateContent).toContain('Sarah Davis');
-      expect(templateContent).toContain('sarah@example.com');
-      expect(templateContent).not.toContain('Phone:');
-      expect(templateContent).toContain('Test message without phone number.');
+      // Verify form data includes customer info but excludes phone when not provided
+      expect(formData.get('name')).toBe('Sarah Davis');
+      expect(formData.get('email')).toBe('sarah@example.com');
+      expect(formData.get('phone')).toBeNull(); // Phone not included when empty
+      expect(formData.get('message')).toBe('Test message without phone number.');
     });
   });
 
@@ -795,7 +782,7 @@ describe('ContactFormSubmit', () => {
 
       // Wait for submission to complete
       await waitFor(() => {
-        expect(screen.getByText(/thank you/i)).toBeInTheDocument();
+        expect(screen.getByText(/message sent successfully/i)).toBeInTheDocument();
       });
     });
 
@@ -826,7 +813,7 @@ describe('ContactFormSubmit', () => {
 
       // Wait for submission to complete
       await waitFor(() => {
-        expect(screen.getByText(/thank you/i)).toBeInTheDocument();
+        expect(screen.getByText(/message sent successfully/i)).toBeInTheDocument();
       });
     });
 
@@ -847,7 +834,7 @@ describe('ContactFormSubmit', () => {
 
       // Wait for success state
       await waitFor(() => {
-        expect(screen.getByText(/thank you/i)).toBeInTheDocument();
+        expect(screen.getByText(/message sent successfully/i)).toBeInTheDocument();
         expect(screen.getByText(/your message has been received successfully/i)).toBeInTheDocument();
         expect(screen.getByText(/we will reach out to you within 24-48 hours/i)).toBeInTheDocument();
       });
@@ -877,7 +864,7 @@ describe('ContactFormSubmit', () => {
 
       // Wait for success state
       await waitFor(() => {
-        expect(screen.getByText(/thank you/i)).toBeInTheDocument();
+        expect(screen.getByText(/message sent successfully/i)).toBeInTheDocument();
       });
 
       // Click "Send Another Message" to return to form
@@ -1032,12 +1019,22 @@ describe('ContactFormSubmit', () => {
       const submitButton = screen.getByRole('button', { name: /send message/i });
       await user.click(submitButton);
 
-      // Wait for error message and automatic fallback display
+      // Wait for error message
       await waitFor(() => {
         expect(screen.getByText(/too many submissions/i)).toBeInTheDocument();
+      });
+
+      // Verify "Show Alternative Contact Methods" button is available for non-retryable errors
+      const fallbackButton = screen.getByRole('button', { name: /show alternative contact methods/i });
+      expect(fallbackButton).toBeInTheDocument();
+      
+      // Click the button to show fallback
+      await user.click(fallbackButton);
+      
+      // Now verify fallback information is displayed
+      await waitFor(() => {
         expect(screen.getByText(/having trouble with the form/i)).toBeInTheDocument();
         expect(screen.getByText(/aurabyshenoi@gmail.com/i)).toBeInTheDocument();
-        expect(screen.getByText(/what to include in your email/i)).toBeInTheDocument();
       });
 
       // Verify "Try the form again" button is available

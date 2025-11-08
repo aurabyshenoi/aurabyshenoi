@@ -5,12 +5,14 @@ import PaintingCard from './PaintingCard';
 interface PaintingGridProps {
   paintings: Painting[];
   onPaintingClick: (painting: Painting) => void;
+  onInquire?: (painting: Painting) => void;
   loading?: boolean;
 }
 
 const PaintingGrid: React.FC<PaintingGridProps> = ({ 
   paintings, 
   onPaintingClick, 
+  onInquire,
   loading = false 
 }) => {
   if (loading) {
@@ -45,12 +47,13 @@ const PaintingGrid: React.FC<PaintingGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-max">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 auto-rows-max">
       {paintings.map((painting) => (
         <PaintingCard
           key={painting._id}
           painting={painting}
           onClick={onPaintingClick}
+          onInquire={onInquire}
         />
       ))}
     </div>

@@ -8,23 +8,17 @@ interface ContactSuccessProps {
   onGalleryClick: () => void;
   onAboutClick: () => void;
   onContactClick: () => void;
-  onCartClick: () => void;
-  cartItemCount?: number;
 }
 
 const ContactSuccess: React.FC<ContactSuccessProps> = ({
   onHomeClick,
   onGalleryClick,
   onAboutClick,
-  onContactClick,
-  onCartClick,
-  cartItemCount = 0
+  onContactClick
 }) => {
   return (
     <div className="min-h-screen bg-off-white flex flex-col">
       <Header
-        cartItemCount={cartItemCount}
-        onCartClick={onCartClick}
         onHomeClick={onHomeClick}
         onGalleryClick={onGalleryClick}
         onAboutClick={onAboutClick}

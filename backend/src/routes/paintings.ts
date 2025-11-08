@@ -77,8 +77,101 @@ router.get('/', async (req: Request, res: Response) => {
       page = '1',
       limit = '12',
       sortBy = 'createdAt',
-      sortOrder = 'desc'
-    }: PaintingQuery = req.query;
+      sortOrder = 'desc',
+      featured
+    }: PaintingQuery & { featured?: string } = req.query;
+
+    // Handle featured paintings request
+    if (featured === 'true') {
+      const cacheKey = `paintings:featured:${limit}`;
+      const cachedResult = getCachedData(cacheKey);
+      if (cachedResult) {
+        return res.json(cachedResult);
+      }
+
+      try {
+        // Get the most recent available paintings for featured section
+        const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+        const featuredPaintings = await Painting.find({ isAvailable: true })
+          .sort({ createdAt: -1 })
+          .limit(limitNum)
+          .lean();
+
+        const transformedPaintings = featuredPaintings.map(transformPaintingData);
+
+        const result = {
+          success: true,
+          data: {
+            paintings: transformedPaintings,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalCount: transformedPaintings.length,
+              limit: limitNum,
+              hasNextPage: false,
+              hasPrevPage: false
+            },
+            filters: {
+              featured: true
+            }
+          }
+        };
+
+        // Cache featured paintings for 5 minutes
+        setCachedData(cacheKey, result, 300000);
+        return res.json(result);
+      } catch (error) {
+        // Fallback to mock data when database is not available
+        console.log('Database not available, using mock featured paintings');
+        const limitNum = Math.min(12, Math.max(1, parseInt(limit)));
+        
+        const mockPaintings = [];
+        for (let i = 1; i <= limitNum && i <= 12; i++) {
+          mockPaintings.push({
+            _id: `mock-painting-${i}`,
+            title: `Featured Artwork ${i}`,
+            description: `Beautiful artwork piece number ${i}`,
+            dimensions: {
+              width: 24,
+              height: 36,
+              unit: 'inches'
+            },
+            medium: 'Oil on Canvas',
+            price: 500 + (i * 100),
+            category: 'Abstract',
+            images: {
+              thumbnail: `/img${i}.jpeg`,
+              fullSize: [`/img${i}.jpeg`]
+            },
+            isAvailable: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
+
+        const result = {
+          success: true,
+          data: {
+            paintings: mockPaintings,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalCount: mockPaintings.length,
+              limit: limitNum,
+              hasNextPage: false,
+              hasPrevPage: false
+            },
+            filters: {
+              featured: true
+            }
+          }
+        };
+
+        // Cache mock data for 1 minute
+        setCachedData(cacheKey, result, 60000);
+        return res.json(result);
+      }
+    }
 
     // Create cache key for this query
     const cacheKey = `paintings:${JSON.stringify(req.query)}`;

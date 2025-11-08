@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Painting } from '../types/painting';
-import AddToCartButton from './AddToCartButton';
 import { OptimizedImage, useResponsiveImageUrls } from './OptimizedImage';
 
 interface PaintingModalProps {
   painting: Painting | null;
   isOpen: boolean;
   onClose: () => void;
+  onInquire?: (painting: Painting) => void;
 }
 
 const PaintingModal: React.FC<PaintingModalProps> = ({ 
   painting, 
   isOpen, 
-  onClose
+  onClose,
+  onInquire
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -44,13 +45,6 @@ const PaintingModal: React.FC<PaintingModalProps> = ({
   if (!isOpen || !painting) {
     return null;
   }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
 
   const formatDimensions = (dimensions: Painting['dimensions']) => {
     return `${dimensions.width}" × ${dimensions.height}" ${dimensions.unit}`;
@@ -152,29 +146,13 @@ const PaintingModal: React.FC<PaintingModalProps> = ({
 
               <div className="space-y-3">
                 <div>
-                  <h3 className="font-semibold text-text-dark mb-1">Dimensions</h3>
-                  <p className="text-text-light">{formatDimensions(painting.dimensions)}</p>
-                </div>
-
-                <div>
                   <h3 className="font-semibold text-text-dark mb-1">Category</h3>
                   <p className="text-text-light capitalize">{painting.category}</p>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-text-dark mb-2">Description</h3>
-                  <p className="text-text-light leading-relaxed">
-                    {painting.description}
-                  </p>
                 </div>
               </div>
 
               <div className="border-t border-warm-gray pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-serif text-2xl text-brown">
-                    {formatPrice(painting.price)}
-                  </span>
-                  
+                <div className="flex items-center justify-end mb-4">
                   {!painting.isAvailable && (
                     <span className="bg-warm-gray text-text-light px-3 py-1 rounded text-sm">
                       Sold
@@ -182,12 +160,14 @@ const PaintingModal: React.FC<PaintingModalProps> = ({
                   )}
                 </div>
 
-                <AddToCartButton 
-                  painting={painting} 
-                  variant="primary" 
-                  size="lg"
-                  className="w-full"
-                />
+                <button
+                  onClick={() => onInquire?.(painting)}
+                  className="w-full bg-sage-green text-white px-6 py-3 rounded-md font-medium hover:bg-sage-green-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-cream disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                  disabled={!painting.isAvailable}
+                  aria-label={`Inquire about ${painting.title}`}
+                >
+                  {painting.isAvailable ? 'Enquire' : 'Sold - Not Available'}
+                </button>
               </div>
             </div>
           </div>

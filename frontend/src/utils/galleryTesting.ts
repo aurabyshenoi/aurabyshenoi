@@ -637,6 +637,7 @@ export const runQuickGalleryTest = async (): Promise<void> => {
  * Initialize testing in development mode
  */
 export const initializeGalleryTesting = (): void => {
+  // Only show test button in development mode
   if (process.env.NODE_ENV === 'development') {
     // Add test button to page for manual testing
     const testButton = document.createElement('button');
@@ -674,5 +675,6 @@ export const initializeGalleryTesting = (): void => {
     });
     
     document.body.appendChild(testButton);
+    console.log('Gallery testing initialized - test button added');
   }
 };

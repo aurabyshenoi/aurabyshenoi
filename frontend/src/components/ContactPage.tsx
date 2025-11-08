@@ -4,13 +4,13 @@ import Header from './Header';
 import Footer from './Footer';
 import ContactFormSubmit from './ContactFormSubmit';
 import ContactSuccess from './ContactSuccess';
+import { Painting } from '../types/painting';
 
 interface ContactPageProps {
   onHomeClick: () => void;
   onGalleryClick: () => void;
   onAboutClick: () => void;
-  onCartClick: () => void;
-  cartItemCount?: number;
+  artworkReference?: Painting;
 }
 
 // Removed ContactFormData and FormErrors interfaces as they're now handled by ContactFormSubmit
@@ -19,8 +19,7 @@ const ContactPage: React.FC<ContactPageProps> = ({
   onHomeClick,
   onGalleryClick,
   onAboutClick,
-  onCartClick,
-  cartItemCount = 0
+  artworkReference
 }) => {
   const [showSuccessPage, setShowSuccessPage] = useState(false);
 
@@ -47,8 +46,6 @@ const ContactPage: React.FC<ContactPageProps> = ({
         onGalleryClick={onGalleryClick}
         onAboutClick={onAboutClick}
         onContactClick={handleBackToContact}
-        onCartClick={onCartClick}
-        cartItemCount={cartItemCount}
       />
     );
   }
@@ -56,8 +53,6 @@ const ContactPage: React.FC<ContactPageProps> = ({
   return (
     <div className="min-h-screen bg-off-white flex flex-col">
       <Header
-        cartItemCount={cartItemCount}
-        onCartClick={onCartClick}
         onHomeClick={onHomeClick}
         onGalleryClick={onGalleryClick}
         onAboutClick={onAboutClick}
@@ -77,11 +72,33 @@ const ContactPage: React.FC<ContactPageProps> = ({
             </button>
             
             <h1 className="text-4xl font-serif text-brown mb-4">
-              Contact Us: Drop in your query and we will reach out to you
+              {artworkReference ? `Inquire About "${artworkReference.title}"` : 'Contact Us: Drop in your query and we will reach out to you'}
             </h1>
             <p className="text-lg text-text-light">
-              Have a question about our artwork or want to make a general inquiry? We'd love to hear from you.
+              {artworkReference 
+                ? `Interested in this artwork? Send us a message and we'll get back to you with more details.`
+                : 'Have a question about our artwork or want to make a general inquiry? We\'d love to hear from you.'
+              }
             </p>
+            
+            {artworkReference && (
+              <div className="bg-sage-green bg-opacity-10 rounded-lg p-4 border border-sage-green border-opacity-20 mt-4">
+                <div className="flex items-start space-x-4">
+                  <img 
+                    src={artworkReference.images.thumbnail} 
+                    alt={artworkReference.title}
+                    className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                  />
+                  <div>
+                    <h3 className="font-serif text-lg text-brown">{artworkReference.title}</h3>
+                    <p className="text-text-light text-sm">{artworkReference.medium}</p>
+                    <p className="text-text-light text-xs">
+                      {artworkReference.dimensions.width}" × {artworkReference.dimensions.height}" {artworkReference.dimensions.unit}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
@@ -89,6 +106,7 @@ const ContactPage: React.FC<ContactPageProps> = ({
             <ContactFormSubmit
               onSubmitSuccess={handleFormSubmitSuccess}
               onSubmitError={handleFormSubmitError}
+              artworkReference={artworkReference}
             />
 
             {/* Contact Information */}

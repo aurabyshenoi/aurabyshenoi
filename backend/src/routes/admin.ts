@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import multer from 'multer';
-import { Painting, Order, Testimonial, Contact } from '../models';
+import { Painting, Testimonial, Contact } from '../models';
 import { authenticateAdmin } from '../middleware/auth';
 import { uploadImageToCloudinary, deleteImageFromCloudinary, generateOptimizedImageUrl } from '../config/cloudinary';
 
@@ -340,194 +340,18 @@ router.post('/images/optimize', async (req: Request, res: Response) => {
   }
 });
 
-// ===== ORDER MANAGEMENT ROUTES =====
 
-// GET /api/admin/orders - Get all orders
-router.get('/orders', async (req: Request, res: Response) => {
-  try {
-    const {
-      page = '1',
-      limit = '20',
-      status,
-      paymentStatus,
-      sortBy = 'createdAt',
-      sortOrder = 'desc'
-    } = req.query;
-
-    // Build filter
-    const filter: any = {};
-    if (status) {
-      filter.status = status;
-    }
-    if (paymentStatus) {
-      filter['payment.status'] = paymentStatus;
-    }
-
-    // Pagination
-    const pageNum = Math.max(1, parseInt(page as string));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string)));
-    const skip = (pageNum - 1) * limitNum;
-
-    // Sort options
-    const sortOptions: any = {};
-    const validSortFields = ['createdAt', 'updatedAt', 'orderNumber', 'payment.amount'];
-    const sortField = validSortFields.includes(sortBy as string) ? sortBy : 'createdAt';
-    sortOptions[sortField as string] = sortOrder === 'asc' ? 1 : -1;
-
-    const [orders, totalCount] = await Promise.all([
-      Order.find(filter)
-        .sort(sortOptions)
-        .skip(skip)
-        .limit(limitNum)
-        .populate('items.paintingId', 'title images')
-        .lean(),
-      Order.countDocuments(filter)
-    ]);
-
-    const totalPages = Math.ceil(totalCount / limitNum);
-
-    res.json({
-      success: true,
-      data: {
-        orders,
-        pagination: {
-          currentPage: pageNum,
-          totalPages,
-          totalCount,
-          limit: limitNum,
-          hasNextPage: pageNum < totalPages,
-          hasPrevPage: pageNum > 1
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('Error fetching admin orders:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch orders',
-      error: process.env.NODE_ENV === 'development' ? error : undefined
-    });
-  }
-});
-
-// GET /api/admin/orders/:id - Get specific order
-router.get('/orders/:id', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    // Validate ObjectId format
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid order ID format'
-      });
-    }
-
-    const order = await Order.findById(id).populate('items.paintingId', 'title images dimensions medium');
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: { order }
-    });
-
-  } catch (error) {
-    console.error('Error fetching order:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch order',
-      error: process.env.NODE_ENV === 'development' ? error : undefined
-    });
-  }
-});
-
-// PUT /api/admin/orders/:id/status - Update order status
-router.put('/orders/:id/status', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    // Validate ObjectId format
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid order ID format'
-      });
-    }
-
-    // Validate status
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
-      });
-    }
-
-    const order = await Order.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true, runValidators: true }
-    );
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: { order },
-      message: 'Order status updated successfully'
-    });
-
-  } catch (error) {
-    console.error('Error updating order status:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update order status',
-      error: process.env.NODE_ENV === 'development' ? error : undefined
-    });
-  }
-});
 
 // GET /api/admin/dashboard/stats - Get dashboard statistics
 router.get('/dashboard/stats', async (req: Request, res: Response) => {
   try {
     const [
       totalPaintings,
-      availablePaintings,
-      totalOrders,
-      pendingOrders,
-      completedOrders,
-      totalRevenue
+      availablePaintings
     ] = await Promise.all([
       Painting.countDocuments(),
-      Painting.countDocuments({ isAvailable: true }),
-      Order.countDocuments(),
-      Order.countDocuments({ status: 'pending' }),
-      Order.countDocuments({ status: 'delivered' }),
-      Order.aggregate([
-        { $match: { 'payment.status': 'completed' } },
-        { $group: { _id: null, total: { $sum: '$payment.amount' } } }
-      ])
+      Painting.countDocuments({ isAvailable: true })
     ]);
-
-    // Get recent orders
-    const recentOrders = await Order.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('items.paintingId', 'title')
-      .lean();
 
     res.json({
       success: true,
@@ -537,17 +361,8 @@ router.get('/dashboard/stats', async (req: Request, res: Response) => {
             total: totalPaintings,
             available: availablePaintings,
             sold: totalPaintings - availablePaintings
-          },
-          orders: {
-            total: totalOrders,
-            pending: pendingOrders,
-            completed: completedOrders
-          },
-          revenue: {
-            total: totalRevenue[0]?.total || 0
           }
-        },
-        recentOrders
+        }
       }
     });
 

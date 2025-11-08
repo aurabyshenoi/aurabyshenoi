@@ -1,14 +1,14 @@
 # AuraByShenoi Website
 
-A modern, responsive web application that combines an elegant art gallery with streamlined e-commerce functionality.
+A modern, responsive portfolio website showcasing an elegant art gallery with direct artist contact functionality.
 
 ## Features
 
-- **Gallery**: Browse paintings in a responsive grid layout
-- **Shopping Cart**: Add paintings to cart and checkout securely
-- **Admin Dashboard**: Manage artwork inventory and orders
-- **Payment Processing**: Secure payments via Stripe
-- **Email Notifications**: Order confirmations and updates
+- **Gallery**: Browse paintings in a responsive masonry grid layout
+- **Artwork Inquiry**: Contact the artist directly about specific pieces
+- **Admin Dashboard**: Manage artwork inventory and contact inquiries
+- **Contact Form**: Reach out to the artist with general or artwork-specific inquiries
+- **Email Notifications**: Contact form submissions and inquiry notifications
 
 ## Tech Stack
 
@@ -22,9 +22,9 @@ A modern, responsive web application that combines an elegant art gallery with s
 - Node.js with Express
 - TypeScript for type safety
 - MongoDB with Mongoose
-- JWT authentication
-- Stripe for payments
-- SendGrid for emails
+- JWT authentication for admin access
+- FormSubmit for contact form handling
+- Email notifications for inquiries
 
 ## Getting Started
 

@@ -1,48 +1,152 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Layout, PaintingCard } from './index';
-import { useCart } from '../contexts/CartContext';
+import { Layout } from './index';
+import { usePaintings } from '../hooks/usePaintings';
 import { Painting } from '../types/painting';
-import { apiFetch } from '../utils/api';
+import { apiFetch, subscribeToNewsletter } from '../utils/api';
 import { GalleryManager, defaultGalleryConfig } from '../utils/galleryManager';
 import { initializeGalleryTesting } from '../utils/galleryTesting';
+import MasonryGallery from './MasonryGallery';
 
 interface HomepageProps {
-  onCartClick?: () => void;
   onGalleryClick?: () => void;
   onAboutClick?: () => void;
   onContactClick?: () => void;
 }
 
-const Homepage: React.FC<HomepageProps> = ({ onCartClick, onGalleryClick, onAboutClick, onContactClick }) => {
-  const { cart } = useCart();
+const Homepage: React.FC<HomepageProps> = ({ onGalleryClick, onAboutClick, onContactClick }) => {
+  const { allPaintings, loading: paintingsLoading } = usePaintings();
   const [featuredPaintings, setFeaturedPaintings] = useState<Painting[]>([]);
   const [loading, setLoading] = useState(true);
   const galleryManagerRef = useRef<GalleryManager | null>(null);
+  
+  // Modal state for artwork viewer
+  const [selectedArtwork, setSelectedArtwork] = useState<Painting | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCartClick = () => {
-    if (onCartClick) {
-      onCartClick();
+  // Newsletter form state
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterError, setNewsletterError] = useState<string | null>(null);
+  const [newsletterSuccess, setNewsletterSuccess] = useState(false);
+
+  // Handle artwork card click to open modal
+  const handleArtworkClick = (artwork: Painting, index: number) => {
+    setSelectedArtwork(artwork);
+    setSelectedIndex(index);
+    setIsModalOpen(true);
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedArtwork(null);
+  };
+
+  // Handle modal navigation
+  const handleModalNavigation = (direction: 'prev' | 'next') => {
+    if (!featuredPaintings.length) return;
+    
+    let newIndex = selectedIndex;
+    if (direction === 'prev') {
+      newIndex = selectedIndex > 0 ? selectedIndex - 1 : featuredPaintings.length - 1;
+    } else {
+      newIndex = selectedIndex < featuredPaintings.length - 1 ? selectedIndex + 1 : 0;
+    }
+    
+    setSelectedIndex(newIndex);
+    setSelectedArtwork(featuredPaintings[newIndex]);
+  };
+
+  // Email validation function
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    return emailRegex.test(email.trim());
+  };
+
+  // Handle newsletter email change
+  const handleNewsletterEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewsletterEmail(e.target.value);
+    // Clear error when user starts typing
+    if (newsletterError) {
+      setNewsletterError(null);
+    }
+    // Clear success message when user starts typing again
+    if (newsletterSuccess) {
+      setNewsletterSuccess(false);
     }
   };
 
-  // Fetch featured paintings
+  // Handle newsletter form submission
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Reset states
+    setNewsletterError(null);
+    setNewsletterSuccess(false);
+
+    // Validate email
+    const trimmedEmail = newsletterEmail.trim();
+    if (!trimmedEmail) {
+      setNewsletterError('Email address is required');
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setNewsletterError('Please enter a valid email address');
+      return;
+    }
+
+    // Submit to API
+    setNewsletterLoading(true);
+    try {
+      await subscribeToNewsletter(trimmedEmail);
+      setNewsletterSuccess(true);
+      setNewsletterEmail(''); // Reset form
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to subscribe. Please try again later.';
+      setNewsletterError(errorMessage);
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
+
+  // Fetch featured paintings with fallback to local data
   useEffect(() => {
     const fetchFeaturedPaintings = async () => {
       try {
         const response = await apiFetch('/api/paintings?featured=true&limit=6');
         if (response.ok) {
           const data = await response.json();
-          setFeaturedPaintings(data.paintings || []);
+          setFeaturedPaintings(data.data?.paintings || []);
+        } else {
+          // Fallback to local paintings data, showing all 12 images
+          if (allPaintings.length > 0) {
+            // Show all paintings (1-12)
+            const featuredSelection = allPaintings.slice(0, 12);
+            setFeaturedPaintings(featuredSelection);
+          }
         }
       } catch (error) {
         console.error('Error fetching featured paintings:', error);
+        // Fallback to local paintings data on error, showing all 12 images
+        if (allPaintings.length > 0) {
+          // Show all paintings (1-12)
+          const featuredSelection = allPaintings.slice(0, 12);
+          setFeaturedPaintings(featuredSelection);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFeaturedPaintings();
-  }, []);
+    // Only fetch when allPaintings is loaded or immediately if already loaded
+    if (!paintingsLoading) {
+      fetchFeaturedPaintings();
+    } else {
+      setLoading(paintingsLoading);
+    }
+  }, [allPaintings, paintingsLoading]);
 
   // Initialize gallery manager after component mounts
   useEffect(() => {
@@ -65,10 +169,40 @@ const Homepage: React.FC<HomepageProps> = ({ onCartClick, onGalleryClick, onAbou
     };
   }, []);
 
+  // Handle keyboard navigation for modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isModalOpen) return;
+
+      switch (event.key) {
+        case 'Escape':
+          handleModalClose();
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          handleModalNavigation('prev');
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          handleModalNavigation('next');
+          break;
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen, selectedIndex, featuredPaintings]);
+
   return (
     <Layout 
-      cartItemCount={cart.totalItems} 
-      onCartClick={handleCartClick}
       onGalleryClick={onGalleryClick}
       onAboutClick={onAboutClick}
       onContactClick={onContactClick}
@@ -109,11 +243,19 @@ const Homepage: React.FC<HomepageProps> = ({ onCartClick, onGalleryClick, onAbou
               <div className="relative">
                 <div className="relative z-10">
                   <div className="w-full bg-warm-gray rounded-lg shadow-2xl overflow-hidden">
-                    {/* Featured artwork image */}
+                    {/* Featured artwork image with optimized loading */}
                     <img 
                       src="/image.png" 
                       alt="Featured Artwork" 
                       className="w-full h-auto object-contain"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        console.error('Failed to load hero image');
+                      }}
                     />
                   </div>
                 </div>
@@ -139,152 +281,23 @@ const Homepage: React.FC<HomepageProps> = ({ onCartClick, onGalleryClick, onAbou
               </p>
             </div>
 
-            {/* Gallery Collage - Puzzle-like Layout */}
-            <div className="gallery-collage mb-12" role="grid" aria-label="Featured artwork gallery">
-              {/* Large featured piece */}
-              <div className="gallery-item size-large" data-image-index="0" role="gridcell">
-                <img 
-                  src="/img1.jpeg" 
-                  alt="Featured Artwork 1 - Abstract landscape painting with vibrant colors" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
+            {/* Masonry Gallery with React Bits Bound Cards */}
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="text-text-light">Loading featured artwork...</div>
               </div>
-
-              {/* Tall piece */}
-              <div className="gallery-item size-tall" data-image-index="1" role="gridcell">
-                <img 
-                  src="/img2.jpeg" 
-                  alt="Featured Artwork 2 - Nature scene with flowing water" 
-                  className="gallery-image"
+            ) : featuredPaintings.length > 0 ? (
+              <div className="mb-12">
+                <MasonryGallery
+                  artworks={featuredPaintings} // Show all featured pieces (12 total)
+                  onCardClick={handleArtworkClick}
                 />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
               </div>
-
-              {/* Small square */}
-              <div className="gallery-item size-small" data-image-index="2" role="gridcell">
-                <img 
-                  src="/img3.jpeg" 
-                  alt="Featured Artwork 3 - Colorful floral composition" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-text-light">No featured artwork available at the moment.</p>
               </div>
-
-              {/* Small square */}
-              <div className="gallery-item size-small" data-image-index="3" role="gridcell">
-                <img 
-                  src="/img4.jpeg" 
-                  alt="Featured Artwork 4 - Panoramic mountain vista" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-
-              {/* Wide panoramic */}
-              <div className="gallery-item size-wide" data-image-index="4" role="gridcell">
-                <img 
-                  src="/img5.jpeg" 
-                  alt="Featured Artwork 5 - Vertical forest scene" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-
-              {/* Medium rectangle */}
-              <div className="gallery-item size-medium" data-image-index="5" role="gridcell">
-                <img 
-                  src="/img6.jpeg" 
-                  alt="Featured Artwork 6 - Sunset over ocean waves" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-
-              {/* Small square */}
-              <div className="gallery-item size-small" data-image-index="6" role="gridcell">
-                <img 
-                  src="/img7.jpeg" 
-                  alt="Featured Artwork 7 - Serene lake reflection" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-
-              {/* Small square */}
-              <div className="gallery-item size-small" data-image-index="7" role="gridcell">
-                <img 
-                  src="/img8.jpeg" 
-                  alt="Featured Artwork 8 - Expansive desert landscape" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-
-              {/* Medium rectangle */}
-              <div className="gallery-item size-medium" data-image-index="8" role="gridcell">
-                <img 
-                  src="/img9.jpeg" 
-                  alt="Featured Artwork 9 - Urban cityscape at twilight" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-
-              {/* Small square */}
-              <div className="gallery-item size-small" data-image-index="9" role="gridcell">
-                <img 
-                  src="/img10.jpeg" 
-                  alt="Featured Artwork 10 - Dramatic storm clouds" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-
-              {/* Small square */}
-              <div className="gallery-item size-small" data-image-index="10" role="gridcell">
-                <img 
-                  src="/img11.jpeg" 
-                  alt="Featured Artwork 11 - Towering redwood trees" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-
-              {/* Small square */}
-              <div className="gallery-item size-small" data-image-index="11" role="gridcell">
-                <img 
-                  src="/img12.jpeg" 
-                  alt="Featured Artwork 12 - Delicate butterfly on flower" 
-                  className="gallery-image"
-                />
-                <div className="gallery-overlay" aria-hidden="true">
-                  <span className="view-icon" role="img" aria-label="View in modal">🔍</span>
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Call to Action */}
             <div className="text-center">
@@ -305,16 +318,28 @@ const Homepage: React.FC<HomepageProps> = ({ onCartClick, onGalleryClick, onAbou
               {/* Artist Image */}
               <div className="order-2 lg:order-1">
                 <div className="relative">
-                  <div className="w-full max-w-md mx-auto h-96 bg-warm-gray rounded-lg shadow-lg overflow-hidden">
-                    {/* Placeholder for artist photo */}
-                    <div className="w-full h-full bg-gradient-to-br from-sage-green-light to-sage-green flex items-center justify-center">
+                  <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl aspect-[4/3] bg-warm-gray rounded-lg shadow-lg overflow-hidden mx-auto lg:mx-0">
+                    <img 
+                      src="/artist-photo.jpeg" 
+                      alt="Artist portrait in traditional attire with vibrant orange decorations and lush greenery in the background"
+                      className="w-full h-full object-cover object-center"
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const placeholder = target.nextElementSibling as HTMLElement;
+                        if (placeholder) placeholder.style.display = 'flex';
+                      }}
+                    />
+                    {/* Fallback placeholder (hidden by default) */}
+                    <div className="w-full h-full bg-gradient-to-br from-sage-green-light to-sage-green flex items-center justify-center" style={{ display: 'none' }}>
                       <div className="text-center text-white">
-                        <div className="w-20 h-20 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                          <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                          <svg className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                           </svg>
                         </div>
-                        <p className="text-sm opacity-80">Artist Portrait</p>
+                        <p className="text-xs sm:text-sm opacity-80">Artist Portrait</p>
                       </div>
                     </div>
                   </div>
@@ -362,60 +387,108 @@ const Homepage: React.FC<HomepageProps> = ({ onCartClick, onGalleryClick, onAbou
                 Be the first to know about new paintings, exhibitions, and special offers. 
                 Join our community of art lovers and collectors.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-md border border-warm-gray focus:outline-none focus:ring-2 focus:ring-sage-green focus:border-transparent"
-                />
-                <button className="bg-brown text-white px-6 py-3 rounded-md font-medium hover:bg-brown-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brown focus:ring-offset-2 whitespace-nowrap">
-                  Subscribe
-                </button>
-              </div>
+              <form onSubmit={handleNewsletterSubmit} className="max-w-md mx-auto">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <label htmlFor="newsletter-email" className="sr-only">
+                    Email address for newsletter
+                  </label>
+                  <input
+                    type="email"
+                    id="newsletter-email"
+                    value={newsletterEmail}
+                    onChange={handleNewsletterEmailChange}
+                    placeholder="Enter your email"
+                    disabled={newsletterLoading}
+                    aria-describedby="newsletter-error newsletter-success"
+                    aria-invalid={!!newsletterError}
+                    aria-required="true"
+                    className="flex-1 px-4 py-3 rounded-md border border-warm-gray focus:outline-none focus:ring-2 focus:ring-sage-green focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={newsletterLoading || !newsletterEmail.trim() || !isValidEmail(newsletterEmail)}
+                    className="bg-brown text-white px-6 py-3 rounded-md font-medium hover:bg-brown-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brown focus:ring-offset-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {newsletterLoading ? 'Subscribing...' : 'Subscribe'}
+                  </button>
+                </div>
+                {newsletterError && (
+                  <div 
+                    id="newsletter-error" 
+                    role="alert" 
+                    aria-live="polite"
+                    className="mt-4 text-red-600 text-sm"
+                  >
+                    {newsletterError}
+                  </div>
+                )}
+                {newsletterSuccess && (
+                  <div 
+                    id="newsletter-success" 
+                    role="status" 
+                    aria-live="polite"
+                    className="mt-4 text-green-600 text-sm"
+                  >
+                    Successfully subscribed to newsletter!
+                  </div>
+                )}
+              </form>
             </div>
           </div>
         </section>
 
         {/* Modal Viewer */}
-        <div 
-          className="modal-viewer" 
-          id="artworkModal" 
-          role="dialog" 
-          aria-modal="true" 
-          aria-labelledby="modal-title"
-          aria-describedby="modal-description"
-        >
-          <div className="modal-background" aria-hidden="true"></div>
-          <div className="modal-content">
-            <button className="modal-close" aria-label="Close artwork viewer">&times;</button>
-            <img 
-              src="" 
-              alt="" 
-              className="modal-image" 
-              id="modalImage" 
-              role="img"
-            />
-            <button 
-              className="nav-arrow nav-prev" 
-              id="prevBtn" 
-              aria-label="View previous artwork"
-            >
-              &#8249;
-            </button>
-            <button 
-              className="nav-arrow nav-next" 
-              id="nextBtn" 
-              aria-label="View next artwork"
-            >
-              &#8250;
-            </button>
+        {isModalOpen && selectedArtwork && (
+          <div 
+            className="modal-viewer active" 
+            role="dialog" 
+            aria-modal="true" 
+            aria-labelledby="modal-title"
+            aria-describedby="modal-description"
+          >
+            <div 
+              className="modal-background" 
+              aria-hidden="true"
+              onClick={handleModalClose}
+            ></div>
+            <div className="modal-content">
+              <button 
+                className="modal-close" 
+                aria-label="Close artwork viewer"
+                onClick={handleModalClose}
+              >
+                &times;
+              </button>
+              <img 
+                src={selectedArtwork.images.fullSize?.[0] || selectedArtwork.images.thumbnail} 
+                alt={selectedArtwork.title}
+                className="modal-image"
+                role="img"
+              />
+              <button 
+                className="nav-arrow nav-prev" 
+                aria-label="View previous artwork"
+                onClick={() => handleModalNavigation('prev')}
+              >
+                &#8249;
+              </button>
+              <button 
+                className="nav-arrow nav-next" 
+                aria-label="View next artwork"
+                onClick={() => handleModalNavigation('next')}
+              >
+                &#8250;
+              </button>
+            </div>
+            {/* Screen reader announcements */}
+            <div id="modal-title" className="sr-only">
+              Artwork Viewer - {selectedArtwork.title}
+            </div>
+            <div id="modal-description" className="sr-only">
+              Use arrow keys to navigate between artworks, or press Escape to close
+            </div>
           </div>
-          {/* Screen reader announcements */}
-          <div id="modal-title" className="sr-only">Artwork Viewer</div>
-          <div id="modal-description" className="sr-only">
-            Use arrow keys to navigate between artworks, or press Escape to close
-          </div>
-        </div>
+        )}
       </div>
     </Layout>
   );

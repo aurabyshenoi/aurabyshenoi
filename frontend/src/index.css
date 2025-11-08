@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import './styles/browserOptimizations.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -46,246 +47,317 @@ h1, h2, h3, h4, h5, h6 {
   border: 0;
 }
 
-/* Featured Artwork Gallery Styles - Collage Layout */
-.gallery-collage {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+/* ===== REACT BITS MASONRY GALLERY STYLES ===== */
+
+/* CSS Custom Properties for React Bits Integration */
+:root {
+  /* React Bits Theme Variables */
+  --rb-color-primary: #9CAF88;
+  --rb-color-primary-light: #B8C5A6;
+  --rb-color-primary-dark: #7A8F6B;
+  --rb-color-secondary: #8B6F47;
+  --rb-color-background: #FAF8F5;
+  --rb-color-surface: #F7F5F2;
+  --rb-color-border: #E8E6E1;
+  --rb-color-text-primary: #3A3A3A;
+  --rb-color-text-secondary: #6B6B6B;
+  --rb-color-text-muted: #8B8B8B;
+  
+  /* Shadows using site color palette */
+  --rb-shadow-sm: 0 1px 2px 0 rgba(58, 58, 58, 0.05);
+  --rb-shadow-md: 0 4px 6px -1px rgba(58, 58, 58, 0.08), 0 2px 4px -1px rgba(58, 58, 58, 0.04);
+  --rb-shadow-lg: 0 8px 16px -4px rgba(58, 58, 58, 0.12), 0 4px 8px -2px rgba(58, 58, 58, 0.06);
+  --rb-shadow-xl: 0 16px 32px -8px rgba(58, 58, 58, 0.15), 0 8px 16px -4px rgba(58, 58, 58, 0.08);
+  
+  /* Typography */
+  --rb-font-family-body: 'Inter', system-ui, sans-serif;
+  --rb-font-family-heading: 'Playfair Display', serif;
+  
+  /* Border radius */
+  --rb-border-radius-sm: 0.375rem;
+  --rb-border-radius-md: 0.5rem;
+  --rb-border-radius-lg: 0.75rem;
+  --rb-border-radius-xl: 1rem;
+  
+  /* Spacing */
+  --rb-spacing-xs: 0.25rem;
+  --rb-spacing-sm: 0.5rem;
+  --rb-spacing-md: 0.75rem;
+  --rb-spacing-lg: 1rem;
+  --rb-spacing-xl: 1.5rem;
+  --rb-spacing-2xl: 2rem;
+}
+
+/* Base Masonry Gallery Container */
+.masonry-gallery-container {
+  display: flex;
   width: 100%;
-  max-width: 900px;
-  height: 600px;
+  max-width: 1200px;
   margin: 0 auto;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-/* Fallback for browsers without CSS Grid support */
-@supports not (display: grid) {
-  .gallery-collage {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-flex-wrap: wrap;
-    -ms-flex-wrap: wrap;
-    flex-wrap: wrap;
-  }
-}
-
-/* Collage piece sizes - puzzle-like layout */
-.gallery-item.size-large {
-  grid-column: span 3;
-  grid-row: span 2;
-}
-
-.gallery-item.size-tall {
-  grid-column: span 2;
-  grid-row: span 2;
-}
-
-.gallery-item.size-wide {
-  grid-column: span 3;
-  grid-row: span 1;
-}
-
-.gallery-item.size-medium {
-  grid-column: span 2;
-  grid-row: span 1;
-}
-
-.gallery-item.size-small {
-  grid-column: span 1;
-  grid-row: span 1;
-}
-
-.gallery-item {
+  padding: var(--rb-spacing-xl);
+  gap: 1.25rem; /* 20px */
+  animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
+  z-index: 1;
+}
+
+/* Masonry Column Layout */
+.masonry-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem; /* 20px */
+  min-height: 0; /* Prevent flex item overflow */
+}
+
+/* React Bits Bound Card Base Styles */
+.artwork-bound-card {
+  position: relative;
+  width: 100%;
+  background: var(--rb-color-background);
+  border-radius: var(--rb-border-radius-lg);
+  box-shadow: var(--rb-shadow-md);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1;
-  background: var(--color-warm-gray);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  will-change: transform, box-shadow, opacity;
+  z-index: 2;
+  
+  /* Enable hardware acceleration for optimal performance */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  
+  /* Optimize for compositing */
+  contain: layout style paint;
 }
 
-/* Focus styles for accessibility */
-.gallery-item:focus {
-  outline: 3px solid var(--color-sage-green);
+/* Bound Card Variants with Responsive Heights */
+.artwork-bound-card.variant-small {
+  height: 15.625rem; /* 250px */
+  min-height: 15.625rem;
+}
+
+.artwork-bound-card.variant-medium {
+  height: 20rem; /* 320px */
+  min-height: 20rem;
+}
+
+.artwork-bound-card.variant-large {
+  height: 25rem; /* 400px */
+  min-height: 25rem;
+}
+
+/* Enhanced Hover Effects with Theme Integration */
+.artwork-bound-card:hover {
+  transform: translate3d(0, var(--hover-translate-y, -3px), 0) scale(var(--hover-scale, 1.03));
+  box-shadow: var(--rb-shadow-xl);
+  z-index: 10;
+  border: 1px solid var(--rb-color-primary);
+}
+
+.artwork-bound-card:focus-visible {
+  outline: 3px solid var(--rb-color-primary);
   outline-offset: 2px;
+  transform: translateY(-2px) scale(1.02);
+  z-index: 10;
 }
 
-.gallery-item:focus-visible {
-  outline: 3px solid var(--color-sage-green);
-  outline-offset: 2px;
+.artwork-bound-card:active {
+  transform: translateY(-1px) scale(0.98);
+  transition: all 0.1s ease;
 }
 
-.gallery-image {
+/* Artwork Image Styling */
+.artwork-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  -o-object-fit: cover; /* Opera */
   object-position: center;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  display: block;
-}
-
-/* Fallback for browsers without object-fit support */
-@supports not (object-fit: cover) {
-  .gallery-image {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-}
-
-/* Enhanced hover effects for dramatic pop-out */
-.gallery-item:hover {
-  z-index: 10;
-  transform: scale(1.05);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-}
-
-.gallery-item:hover .gallery-image {
-  transform: scale(1.1);
-  filter: brightness(1.1) contrast(1.05);
-}
-
-/* Fallback for browsers without transform support */
-@supports not (transform: scale(1)) {
-  .gallery-item:hover .gallery-image {
-    position: relative;
-    z-index: 10;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  }
-}
-
-/* Gallery overlay styles */
-.gallery-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-}
-
-.gallery-item:hover .gallery-overlay {
-  opacity: 1;
-}
-
-.view-icon {
-  color: white;
-  font-size: 2.5rem;
-  pointer-events: none;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
-  transform: scale(0.7);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  display: block;
+  will-change: transform;
+  
+  /* Enable hardware acceleration for optimal performance */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  
+  /* Optimize for compositing */
+  contain: layout style paint;
 }
 
-.gallery-item:hover .view-icon {
-  transform: scale(1);
+.artwork-bound-card:hover .artwork-image {
+  transform: scale(1.08);
 }
 
-/* Responsive breakpoints for collage layout */
-@media (max-width: 768px) {
-  .gallery-collage {
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(6, 1fr);
-    max-width: 400px;
-    height: 600px;
+/* Artwork Info Section */
+.artwork-info {
+  padding: var(--rb-spacing-lg);
+  background: var(--rb-color-background);
+  font-family: var(--rb-font-family-body);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.artwork-bound-card:hover .artwork-info {
+  transform: translateY(-1px);
+}
+
+/* Typography Styling */
+.artwork-title {
+  font-family: var(--rb-font-family-heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--rb-color-text-primary);
+  line-height: 1.25;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artwork-medium,
+.artwork-dimensions {
+  font-size: 0.75rem;
+  color: var(--rb-color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Price Badge Styling */
+.artwork-bound-card .absolute.top-2.right-2 {
+  background: rgba(250, 248, 245, 0.94); /* --color-cream with opacity */
+  backdrop-filter: blur(8px);
+  border-radius: var(--rb-border-radius-full, 9999px);
+  padding: var(--rb-spacing-xs) var(--rb-spacing-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--rb-color-text-primary);
+  box-shadow: var(--rb-shadow-sm);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid var(--rb-color-border);
+}
+
+.artwork-bound-card:hover .absolute.top-2.right-2 {
+  transform: scale(1.05);
+  box-shadow: var(--rb-shadow-md);
+  background: var(--rb-color-background);
+}
+
+/* Sold Badge Styling */
+.artwork-bound-card .absolute.top-2.left-2 {
+  background: #dc2626; /* Red for sold items */
+  color: white;
+  border-radius: var(--rb-border-radius-full, 9999px);
+  padding: var(--rb-spacing-xs) var(--rb-spacing-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: var(--rb-shadow-sm);
+}
+
+/* Hover Overlay Effects */
+.artwork-bound-card .absolute.inset-0.bg-black\/80 {
+  background: linear-gradient(135deg, rgba(58, 58, 58, 0.7), rgba(58, 58, 58, 0.85));
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(0px);
+  border-radius: var(--rb-border-radius-lg);
+}
+
+.artwork-bound-card:hover .absolute.inset-0.bg-black\/80 {
+  backdrop-filter: blur(2px);
+}
+
+/* Animation States - Performance Optimized */
+.masonry-card-hidden {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(0.95);
+  will-change: transform, opacity;
+}
+
+.masonry-card-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: auto; /* Reset will-change after animation */
+}
+
+/* Staggered Entrance Animations - Optimized for Performance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0) scale(0.95);
   }
-  
-  /* Adjust sizes for mobile */
-  .gallery-item.size-large {
-    grid-column: span 4;
-    grid-row: span 2;
-  }
-  
-  .gallery-item.size-tall {
-    grid-column: span 2;
-    grid-row: span 3;
-  }
-  
-  .gallery-item.size-wide {
-    grid-column: span 4;
-    grid-row: span 1;
-  }
-  
-  .gallery-item.size-medium {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-  
-  .gallery-item.size-small {
-    grid-column: span 2;
-    grid-row: span 1;
-  }
-  
-  /* Reduce hover effects on mobile for better performance */
-  .gallery-item:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  }
-  
-  .gallery-item:hover .gallery-image {
-    transform: scale(1.05);
-  }
-  
-  .view-icon {
-    font-size: 2rem;
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
-  .gallery-collage {
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    max-width: 700px;
-    height: 560px;
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translate3d(-40px, 0, 0) scale(0.9);
   }
-  
-  /* Adjust sizes for tablet */
-  .gallery-item.size-large {
-    grid-column: span 3;
-    grid-row: span 2;
-  }
-  
-  .gallery-item.size-tall {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-  
-  .gallery-item.size-wide {
-    grid-column: span 3;
-    grid-row: span 1;
-  }
-  
-  .gallery-item.size-medium {
-    grid-column: span 2;
-    grid-row: span 1;
-  }
-  
-  .gallery-item.size-small {
-    grid-column: span 1;
-    grid-row: span 1;
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
-@media (min-width: 1025px) {
-  .gallery-collage {
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    max-width: 900px;
-    height: 600px;
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translate3d(40px, 0, 0) scale(0.9);
   }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Animation Classes - Optimized Performance */
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Z-Index Management for Bound Effects */
+.masonry-gallery-container {
+  /* Create stacking context for proper layering */
+  position: relative;
+  z-index: 1;
+}
+
+.artwork-bound-card {
+  /* Base z-index for cards */
+  z-index: 2;
+}
+
+.artwork-bound-card:hover,
+.artwork-bound-card:focus-visible {
+  /* Elevated z-index for interactive states */
+  z-index: 10;
+}
+
+.artwork-bound-card .absolute {
+  /* Ensure overlays and badges stay above card content */
+  z-index: 3;
 }
 
 /* Modal Viewer Styles */
@@ -608,12 +680,33 @@ h1, h2, h3, h4, h5, h6 {
   .gallery-overlay,
   .modal-viewer,
   .nav-arrow,
-  .modal-close {
+  .modal-close,
+  .artwork-bound-card,
+  .artwork-image,
+  .artwork-info {
     transition: none !important;
     animation: none !important;
   }
   
-  .gallery-item:hover .gallery-image {
+  .gallery-item:hover .gallery-image,
+  .artwork-bound-card:hover,
+  .artwork-bound-card:hover .artwork-image,
+  .artwork-bound-card:hover .artwork-info {
+    transform: none !important;
+  }
+  
+  .masonry-card-hidden,
+  .masonry-card-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  
+  .animate-fade-in-up,
+  .animate-slide-in-left,
+  .animate-slide-in-right {
+    animation: none !important;
+    opacity: 1 !important;
     transform: none !important;
   }
 }
@@ -659,4 +752,1436 @@ h1, h2, h3, h4, h5, h6 {
 .modal-close,
 .nav-arrow {
   -webkit-tap-highlight-color: transparent;
+}
+/* Mason
+ry Gallery Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Animation classes */
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Staggered animation states */
+.masonry-card-hidden {
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+}
+
+.masonry-card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== RESPONSIVE MASONRY GALLERY STYLES ===== */
+
+/* Mobile-first responsive styles */
+@media (max-width: 479px) {
+  .masonry-gallery-container {
+    flex-direction: column;
+    gap: 0.9375rem; /* 15px */
+    padding: 0.75rem;
+    max-width: 100%;
+  }
+  
+  .masonry-column {
+    gap: 0.9375rem; /* 15px */
+  }
+  
+  /* Single column layout on mobile */
+  .masonry-column:not(:first-child) {
+    display: none;
+  }
+  
+  /* Mobile card height adjustments */
+  .artwork-bound-card.variant-small {
+    height: 12.5rem !important; /* 200px */
+    min-height: 12.5rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 15.625rem !important; /* 250px */
+    min-height: 15.625rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 18.75rem !important; /* 300px */
+    min-height: 18.75rem;
+  }
+  
+  /* Touch-friendly interactions */
+  .artwork-bound-card {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .artwork-bound-card:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+  
+  .artwork-bound-card:active {
+    transform: translateY(0) scale(0.98);
+    transition: all 0.1s ease;
+  }
+  
+  /* Reduce animation intensity on mobile */
+  .artwork-bound-card:hover .artwork-image {
+    transform: scale(1.05);
+  }
+}
+
+/* Small mobile devices */
+@media (min-width: 480px) and (max-width: 767px) {
+  .masonry-gallery-container {
+    flex-direction: column;
+    gap: 0.9375rem; /* 15px */
+    padding: 1rem;
+  }
+  
+  .masonry-column {
+    gap: 0.9375rem; /* 15px */
+  }
+  
+  /* Single column layout on small mobile */
+  .masonry-column:not(:first-child) {
+    display: none;
+  }
+  
+  /* Adjusted card heights for small mobile */
+  .artwork-bound-card.variant-small {
+    height: 13.75rem !important; /* 220px */
+    min-height: 13.75rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 17.5rem !important; /* 280px */
+    min-height: 17.5rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 21.875rem !important; /* 350px */
+    min-height: 21.875rem;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .masonry-gallery-container {
+    gap: 1.125rem; /* 18px */
+    padding: 1.25rem;
+  }
+  
+  .masonry-column {
+    gap: 1.125rem; /* 18px */
+  }
+  
+  /* Two column layout on tablet */
+  .masonry-column:nth-child(n+3) {
+    display: none;
+  }
+  
+  /* Tablet card height adjustments */
+  .artwork-bound-card.variant-small {
+    height: 13.75rem !important; /* 220px */
+    min-height: 13.75rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 17.5rem !important; /* 280px */
+    min-height: 17.5rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 21.875rem !important; /* 350px */
+    min-height: 21.875rem;
+  }
+  
+  /* Moderate hover effects on tablet */
+  .artwork-bound-card:hover {
+    transform: translateY(-3px) scale(1.03);
+  }
+  
+  .artwork-bound-card:hover .artwork-image {
+    transform: scale(1.06);
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .masonry-gallery-container {
+    gap: 1.25rem; /* 20px */
+    padding: 1.5rem;
+  }
+  
+  .masonry-column {
+    gap: 1.25rem; /* 20px */
+  }
+  
+  /* Three column layout on desktop */
+  .masonry-column:nth-child(n+4) {
+    display: none;
+  }
+  
+  /* Desktop card heights (default) */
+  .artwork-bound-card.variant-small {
+    height: 15.625rem !important; /* 250px */
+    min-height: 15.625rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 20rem !important; /* 320px */
+    min-height: 20rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 25rem !important; /* 400px */
+    min-height: 25rem;
+  }
+}
+
+/* Large desktop styles */
+@media (min-width: 1200px) {
+  .masonry-gallery-container {
+    max-width: 1200px;
+    gap: 1.25rem; /* 20px */
+    padding: 2rem;
+  }
+  
+  /* Three column layout remains optimal for large desktop */
+  .masonry-column:nth-child(n+4) {
+    display: none;
+  }
+}
+
+/* Smooth price badge animations */
+.artwork-bound-card .absolute.top-2.right-2 {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1);
+}
+
+.artwork-bound-card:hover .absolute.top-2.right-2 {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Text truncation utilities */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ===== RESPONSIVE MASONRY GALLERY STYLES ===== */
+
+/* Base masonry container styles */
+.masonry-gallery-container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  gap: 1.25rem; /* 20px */
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.masonry-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem; /* 20px */
+}
+
+/* Mobile-first responsive styles */
+@media (max-width: 479px) {
+  .masonry-gallery-container {
+    flex-direction: column;
+    gap: 0.9375rem; /* 15px */
+    padding: 0.75rem;
+    max-width: 100%;
+  }
+  
+  .masonry-column {
+    gap: 0.9375rem; /* 15px */
+  }
+  
+  /* Single column layout on mobile */
+  .masonry-column:not(:first-child) {
+    display: none;
+  }
+  
+  /* Mobile card height adjustments */
+  .artwork-bound-card.variant-small {
+    height: 12.5rem !important; /* 200px */
+    min-height: 12.5rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 15.625rem !important; /* 250px */
+    min-height: 15.625rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 18.75rem !important; /* 300px */
+    min-height: 18.75rem;
+  }
+  
+  /* Touch-friendly interactions */
+  .artwork-bound-card {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .artwork-bound-card:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+  
+  .artwork-bound-card:active {
+    transform: translateY(0) scale(0.98);
+    transition: all 0.1s ease;
+  }
+  
+  /* Reduce animation intensity on mobile */
+  .artwork-bound-card:hover .artwork-image {
+    transform: scale(1.05);
+  }
+  
+  /* Larger touch targets for mobile */
+  .artwork-bound-card .absolute.top-2.right-2 {
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+    min-height: 2.75rem; /* 44px minimum touch target */
+    min-width: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .artwork-bound-card .absolute.top-2.left-2 {
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Small mobile devices */
+@media (min-width: 480px) and (max-width: 767px) {
+  .masonry-gallery-container {
+    flex-direction: column;
+    gap: 0.9375rem; /* 15px */
+    padding: 1rem;
+  }
+  
+  .masonry-column {
+    gap: 0.9375rem; /* 15px */
+  }
+  
+  /* Single column layout on small mobile */
+  .masonry-column:not(:first-child) {
+    display: none;
+  }
+  
+  /* Adjusted card heights for small mobile */
+  .artwork-bound-card.variant-small {
+    height: 13.75rem !important; /* 220px */
+    min-height: 13.75rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 17.5rem !important; /* 280px */
+    min-height: 17.5rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 21.875rem !important; /* 350px */
+    min-height: 21.875rem;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .masonry-gallery-container {
+    gap: 1.125rem; /* 18px */
+    padding: 1.25rem;
+  }
+  
+  .masonry-column {
+    gap: 1.125rem; /* 18px */
+  }
+  
+  /* Two column layout on tablet */
+  .masonry-column:nth-child(n+3) {
+    display: none;
+  }
+  
+  /* Tablet card height adjustments */
+  .artwork-bound-card.variant-small {
+    height: 13.75rem !important; /* 220px */
+    min-height: 13.75rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 17.5rem !important; /* 280px */
+    min-height: 17.5rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 21.875rem !important; /* 350px */
+    min-height: 21.875rem;
+  }
+  
+  /* Moderate hover effects on tablet */
+  .artwork-bound-card:hover {
+    transform: translateY(-3px) scale(1.03);
+  }
+  
+  .artwork-bound-card:hover .artwork-image {
+    transform: scale(1.06);
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .masonry-gallery-container {
+    gap: 1.25rem; /* 20px */
+    padding: 1.5rem;
+  }
+  
+  .masonry-column {
+    gap: 1.25rem; /* 20px */
+  }
+  
+  /* Three column layout on desktop */
+  .masonry-column:nth-child(n+4) {
+    display: none;
+  }
+  
+  /* Desktop card heights (default) */
+  .artwork-bound-card.variant-small {
+    height: 15.625rem !important; /* 250px */
+    min-height: 15.625rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 20rem !important; /* 320px */
+    min-height: 20rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 25rem !important; /* 400px */
+    min-height: 25rem;
+  }
+  
+  /* Full hover effects on desktop */
+  .artwork-bound-card:hover {
+    transform: translateY(-4px) scale(var(--hover-scale, 1.05));
+  }
+  
+  .artwork-bound-card:hover .artwork-image {
+    transform: scale(1.08);
+  }
+}
+
+/* Large desktop styles */
+@media (min-width: 1200px) {
+  .masonry-gallery-container {
+    max-width: 1200px;
+    gap: 1.25rem; /* 20px */
+    padding: 2rem;
+  }
+  
+  /* Four column layout on large desktop */
+  .masonry-column:nth-child(n+5) {
+    display: none;
+  }
+  
+  /* Slightly smaller cards for 4-column layout */
+  .artwork-bound-card.variant-small {
+    height: 14.375rem !important; /* 230px */
+    min-height: 14.375rem;
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 18.75rem !important; /* 300px */
+    min-height: 18.75rem;
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 23.75rem !important; /* 380px */
+    min-height: 23.75rem;
+  }
+}
+
+/* Responsive card content adjustments */
+@media (max-width: 767px) {
+  .artwork-info {
+    padding: 0.75rem;
+    height: 30%;
+  }
+  
+  .artwork-title {
+    font-size: 0.875rem;
+    line-height: 1.25;
+    margin-bottom: 0.25rem;
+  }
+  
+  .artwork-medium,
+  .artwork-dimensions {
+    font-size: 0.75rem;
+  }
+  
+  /* Adjust image area for mobile */
+  .artwork-bound-card .relative.h-3\/4 {
+    height: 70%;
+  }
+  
+  .artwork-bound-card .h-1\/4 {
+    height: 30%;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .artwork-info {
+    padding: 0.875rem;
+  }
+  
+  .artwork-title {
+    font-size: 0.9375rem;
+    line-height: 1.3;
+  }
+  
+  .artwork-medium,
+  .artwork-dimensions {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Responsive gap utilities */
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.gap-5 { gap: 1.25rem; }
+
+/* Responsive masonry column utilities */
+@media (max-width: 767px) {
+  .masonry-gallery-container .gap-3 { gap: 0.75rem; }
+  .masonry-gallery-container .gap-4 { gap: 0.9375rem; }
+  .masonry-gallery-container .gap-5 { gap: 0.9375rem; }
+  
+  .masonry-column.gap-3 { gap: 0.75rem; }
+  .masonry-column.gap-4 { gap: 0.9375rem; }
+  .masonry-column.gap-5 { gap: 0.9375rem; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .masonry-gallery-container .gap-3 { gap: 0.9375rem; }
+  .masonry-gallery-container .gap-4 { gap: 1.125rem; }
+  .masonry-gallery-container .gap-5 { gap: 1.125rem; }
+  
+  .masonry-column.gap-3 { gap: 0.9375rem; }
+  .masonry-column.gap-4 { gap: 1.125rem; }
+  .masonry-column.gap-5 { gap: 1.125rem; }
+}
+
+/* Touch-friendly enhancements */
+@media (max-width: 1023px) {
+  .artwork-bound-card {
+    /* Ensure adequate touch targets */
+    min-height: 12rem;
+    touch-action: manipulation;
+  }
+  
+  /* Improve focus visibility on touch devices */
+  .artwork-bound-card:focus-visible {
+    outline: 4px solid #9CAF88;
+    outline-offset: 3px;
+  }
+  
+  /* Reduce complex animations on touch devices for performance */
+  .artwork-bound-card .absolute.inset-0.bg-black\/80 {
+    backdrop-filter: none;
+  }
+  
+  .artwork-bound-card:hover .absolute.inset-0.bg-black\/80 {
+    backdrop-filter: none;
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .artwork-image {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .masonry-gallery-container {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  
+  /* Two columns in landscape mobile */
+  .masonry-column:nth-child(n+3) {
+    display: none;
+  }
+  
+  .masonry-column:nth-child(-n+2) {
+    display: flex;
+  }
+  
+  /* Adjust card heights for landscape */
+  .artwork-bound-card.variant-small {
+    height: 11.25rem !important; /* 180px */
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 13.75rem !important; /* 220px */
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 16.25rem !important; /* 260px */
+  }
+}
+
+/* Print styles for masonry gallery */
+@media print {
+  .masonry-gallery-container {
+    display: block;
+    page-break-inside: avoid;
+  }
+  
+  .masonry-column {
+    display: block;
+    break-inside: avoid;
+  }
+  
+  .artwork-bound-card {
+    display: block;
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .artwork-bound-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .artwork-bound-card .absolute.inset-0.bg-black\/80 {
+    display: none;
+  }
+}
+
+/* Accessibility enhancements */
+@media (prefers-reduced-motion: reduce) {
+  .masonry-gallery-container {
+    animation: none;
+  }
+  
+  .artwork-bound-card,
+  .artwork-image,
+  .artwork-info,
+  .artwork-bound-card .absolute {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .artwork-bound-card:hover,
+  .artwork-bound-card:hover .artwork-image,
+  .artwork-bound-card:hover .artwork-info {
+    transform: none !important;
+  }
+  
+  .masonry-card-hidden,
+  .masonry-card-visible {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  .animate-fade-in-up,
+  .animate-slide-in-left,
+  .animate-slide-in-right {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .artwork-bound-card {
+    border: 2px solid;
+  }
+  
+  .artwork-bound-card:hover {
+    border-color: #000;
+  }
+  
+  .artwork-bound-card:focus-visible {
+    outline: 4px solid;
+    outline-offset: 2px;
+  }
+}
+
+/* Dark mode support (if implemented) */
+@media (prefers-color-scheme: dark) {
+  .artwork-bound-card {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .artwork-info {
+    background-color: #1f2937;
+  }
+  
+  .artwork-title {
+    color: #f9fafb;
+  }
+  
+  .artwork-medium,
+  .artwork-dimensions {
+    color: #d1d5db;
+  }
+}/* ===
+== MASONRY GALLERY ACCESSIBILITY & PERFORMANCE ===== */
+
+/* Landscape orientation adjustments for mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .masonry-gallery-container {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  
+  /* Two columns in landscape mobile */
+  .masonry-column:nth-child(n+3) {
+    display: none;
+  }
+  
+  .masonry-column:nth-child(-n+2) {
+    display: flex;
+  }
+  
+  /* Adjust card heights for landscape */
+  .artwork-bound-card.variant-small {
+    height: 11.25rem !important; /* 180px */
+  }
+  
+  .artwork-bound-card.variant-medium {
+    height: 13.75rem !important; /* 220px */
+  }
+  
+  .artwork-bound-card.variant-large {
+    height: 16.25rem !important; /* 260px */
+  }
+}
+
+/* Touch-friendly enhancements */
+@media (max-width: 1023px) {
+  .artwork-bound-card {
+    /* Ensure adequate touch targets */
+    min-height: 12rem;
+    touch-action: manipulation;
+  }
+  
+  /* Improve focus visibility on touch devices */
+  .artwork-bound-card:focus-visible {
+    outline: 4px solid var(--rb-color-primary);
+    outline-offset: 3px;
+  }
+  
+  /* Reduce complex animations on touch devices for performance */
+  .artwork-bound-card .absolute.inset-0.bg-black\/80 {
+    backdrop-filter: none;
+  }
+  
+  .artwork-bound-card:hover .absolute.inset-0.bg-black\/80 {
+    backdrop-filter: none;
+  }
+  
+  /* Larger touch targets for badges */
+  .artwork-bound-card .absolute.top-2.right-2,
+  .artwork-bound-card .absolute.top-2.left-2 {
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+    min-height: 2.75rem; /* 44px minimum touch target */
+    min-width: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .artwork-image {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Accessibility enhancements */
+@media (prefers-reduced-motion: reduce) {
+  .masonry-gallery-container {
+    animation: none;
+  }
+  
+  .artwork-bound-card,
+  .artwork-image,
+  .artwork-info,
+  .artwork-bound-card .absolute {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .artwork-bound-card:hover,
+  .artwork-bound-card:hover .artwork-image,
+  .artwork-bound-card:hover .artwork-info {
+    transform: none !important;
+  }
+  
+  .masonry-card-hidden,
+  .masonry-card-visible {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  .animate-fade-in-up,
+  .animate-slide-in-left,
+  .animate-slide-in-right {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .artwork-bound-card {
+    border: 2px solid var(--rb-color-text-primary);
+  }
+  
+  .artwork-bound-card:hover {
+    border-color: var(--rb-color-primary);
+  }
+  
+  .artwork-bound-card:focus-visible {
+    outline: 4px solid var(--rb-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* Dark mode support (if implemented) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rb-color-background: #1f2937;
+    --rb-color-surface: #374151;
+    --rb-color-text-primary: #f9fafb;
+    --rb-color-text-secondary: #d1d5db;
+    --rb-color-border: #4b5563;
+  }
+  
+  .artwork-bound-card {
+    background-color: var(--rb-color-surface);
+    color: var(--rb-color-text-primary);
+  }
+  
+  .artwork-info {
+    background-color: var(--rb-color-surface);
+  }
+  
+  .artwork-title {
+    color: var(--rb-color-text-primary);
+  }
+  
+  .artwork-medium,
+  .artwork-dimensions {
+    color: var(--rb-color-text-secondary);
+  }
+}
+
+/* Performance optimizations */
+.artwork-bound-card {
+  /* Enable hardware acceleration */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  /* Optimize for animations */
+  will-change: transform, box-shadow;
+}
+
+.artwork-image {
+  /* Enable hardware acceleration */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Print styles for masonry gallery */
+@media print {
+  .masonry-gallery-container {
+    display: block;
+    page-break-inside: avoid;
+  }
+  
+  .masonry-column {
+    display: block;
+    break-inside: avoid;
+  }
+  
+  .artwork-bound-card {
+    display: block;
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .artwork-bound-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .artwork-bound-card .absolute.inset-0.bg-black\/80 {
+    display: none;
+  }
+}
+
+/* Utility classes for responsive gaps */
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.gap-5 { gap: 1.25rem; }
+
+/* Responsive gap utilities */
+@media (max-width: 767px) {
+  .masonry-gallery-container .gap-3 { gap: 0.75rem; }
+  .masonry-gallery-container .gap-4 { gap: 0.9375rem; }
+  .masonry-gallery-container .gap-5 { gap: 0.9375rem; }
+  
+  .masonry-column.gap-3 { gap: 0.75rem; }
+  .masonry-column.gap-4 { gap: 0.9375rem; }
+  .masonry-column.gap-5 { gap: 0.9375rem; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .masonry-gallery-container .gap-3 { gap: 0.9375rem; }
+  .masonry-gallery-container .gap-4 { gap: 1.125rem; }
+  .masonry-gallery-container .gap-5 { gap: 1.125rem; }
+  
+  .masonry-column.gap-3 { gap: 0.9375rem; }
+  .masonry-column.gap-4 { gap: 1.125rem; }
+  .masonry-column.gap-5 { gap: 1.125rem; }
+}
+
+/* Text truncation utilities */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Smooth transitions for touch feedback */
+.artwork-bound-card,
+.artwork-bound-card .absolute {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== ARTIST IMAGE RESPONSIVE STYLES ===== */
+
+/* Artist image container responsive behavior */
+.artist-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background-color: var(--color-warm-gray);
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+/* Ensure aspect ratio is maintained across all screen sizes */
+.aspect-4-3 {
+  aspect-ratio: 4/3;
+}
+
+/* Fallback for browsers that don't support aspect-ratio */
+@supports not (aspect-ratio: 4/3) {
+  .aspect-4-3 {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* 4:3 aspect ratio = 3/4 = 0.75 = 75% */
+  }
+  
+  .aspect-4-3 > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* Mobile-first responsive artist image styles */
+@media (max-width: 479px) {
+  .artist-image-container {
+    max-width: 20rem; /* 320px */
+    margin: 0 auto;
+  }
+  
+  /* Smaller decorative elements on mobile */
+  .artist-image-container + .absolute {
+    inset: -0.5rem;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 639px) {
+  .artist-image-container {
+    max-width: 24rem; /* 384px */
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .artist-image-container {
+    max-width: 28rem; /* 448px */
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .artist-image-container {
+    max-width: 32rem; /* 512px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .artist-image-container {
+    max-width: 24rem; /* 384px - w-96 equivalent */
+  }
+}
+
+/* Artist image responsive behavior */
+.artist-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Artist image placeholder responsive styles */
+.artist-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--color-sage-green-light), var(--color-sage-green));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.artist-image-placeholder .placeholder-content {
+  text-align: center;
+  color: white;
+}
+
+.artist-image-placeholder .placeholder-icon {
+  width: 4rem;
+  height: 4rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.artist-image-placeholder .placeholder-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.artist-image-placeholder .placeholder-text {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+/* Responsive placeholder adjustments */
+@media (max-width: 479px) {
+  .artist-image-placeholder .placeholder-icon {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .artist-image-placeholder .placeholder-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .artist-image-placeholder .placeholder-text {
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 639px) {
+  .artist-image-placeholder .placeholder-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  
+  .artist-image-placeholder .placeholder-icon svg {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .artist-image-placeholder .placeholder-icon {
+    width: 4rem;
+    height: 4rem;
+  }
+  
+  .artist-image-placeholder .placeholder-icon svg {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .artist-image-placeholder .placeholder-text {
+    font-size: 0.875rem;
+  }
+}
+
+/* Decorative frame responsive behavior */
+.artist-image-decorative-frame {
+  position: absolute;
+  inset: -0.5rem;
+  background: rgba(139, 111, 71, 0.1);
+  border-radius: 0.5rem;
+  z-index: -1;
+}
+
+@media (min-width: 768px) {
+  .artist-image-decorative-frame {
+    inset: -0.5rem;
+  }
+}
+
+/* Artist image container hover effects (desktop only) */
+@media (min-width: 1024px) {
+  .artist-image-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .artist-image-container:hover .artist-image {
+    transform: scale(1.05);
+  }
+}
+
+/* Touch device optimizations */
+@media (max-width: 1023px) {
+  .artist-image-container {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Subtle touch feedback */
+  .artist-image-container:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* High contrast mode support for artist images */
+@media (prefers-contrast: high) {
+  .artist-image-container {
+    border: 2px solid var(--color-text-dark);
+  }
+  
+  .artist-image-placeholder {
+    background: var(--color-text-dark);
+    color: var(--color-cream);
+  }
+  
+  .artist-image-placeholder .placeholder-icon {
+    background: rgba(250, 248, 245, 0.3);
+  }
+}
+
+/* Reduced motion support for artist images */
+@media (prefers-reduced-motion: reduce) {
+  .artist-image-container,
+  .artist-image,
+  .artist-image-container:hover,
+  .artist-image-container:hover .artist-image {
+    transition: none !important;
+    transform: none !important;
+  }
+  
+  .artist-image-container:active {
+    transform: none !important;
+  }
+}
+
+/* Print styles for artist images */
+@media print {
+  .artist-image-container {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .artist-image-decorative-frame {
+    display: none;
+  }
+  
+  .artist-image-container:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+/* =
+==== PERFORMANCE OPTIMIZATIONS & ACCESSIBILITY ENHANCEMENTS ===== */
+
+/* Performance: Reset will-change after animations complete */
+.artwork-bound-card.animation-complete {
+  will-change: auto;
+}
+
+.artwork-image.animation-complete {
+  will-change: auto;
+}
+
+/* Performance: Optimize for GPU compositing */
+.artwork-bound-card,
+.artwork-image {
+  /* Force GPU layer creation for smooth animations */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Performance: Optimize hover states */
+.artwork-bound-card:hover {
+  /* Use transform instead of changing multiple properties */
+  transform: translate3d(0, var(--hover-translate-y, -3px), 0) scale(var(--hover-scale, 1.03));
+}
+
+/* Performance: Optimize focus states */
+.artwork-bound-card:focus-visible {
+  outline: 3px solid var(--rb-color-primary);
+  outline-offset: 2px;
+  /* Use transform for consistent performance */
+  transform: translate3d(0, -2px, 0) scale(1.02);
+  z-index: 10;
+}
+
+/* Enhanced Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  /* Global animation reset for better accessibility */
+  .masonry-gallery-container *,
+  .masonry-gallery-container *::before,
+  .masonry-gallery-container *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    will-change: auto !important;
+  }
+  
+  /* Ensure all cards are immediately visible */
+  .masonry-card-hidden {
+    opacity: 1 !important;
+    transform: translate3d(0, 0, 0) !important;
+  }
+  
+  /* Disable hover animations but maintain focus for accessibility */
+  .artwork-bound-card:hover {
+    transform: none !important;
+  }
+  
+  .artwork-bound-card:focus-visible {
+    outline: 4px solid var(--rb-color-primary) !important;
+    outline-offset: 3px !important;
+    transform: none !important;
+  }
+}
+
+/* Accessibility: Enhanced keyboard navigation */
+.artwork-bound-card {
+  /* Ensure keyboard focusable */
+  tabindex: 0;
+}
+
+.artwork-bound-card:focus {
+  /* Visible focus indicator */
+  outline: 2px solid var(--rb-color-primary);
+  outline-offset: 2px;
+}
+
+.artwork-bound-card:focus:not(:focus-visible) {
+  /* Hide focus for mouse users */
+  outline: none;
+}
+
+/* Accessibility: Screen reader support */
+.artwork-bound-card .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Accessibility: High contrast mode enhancements */
+@media (prefers-contrast: high) {
+  .artwork-bound-card {
+    border: 2px solid var(--rb-color-text-primary);
+    background: var(--rb-color-background);
+  }
+  
+  .artwork-bound-card:hover,
+  .artwork-bound-card:focus-visible {
+    border-color: var(--rb-color-primary);
+    border-width: 3px;
+  }
+  
+  .artwork-title {
+    color: var(--rb-color-text-primary);
+    font-weight: 700;
+  }
+  
+  .artwork-medium,
+  .artwork-dimensions {
+    color: var(--rb-color-text-primary);
+    font-weight: 600;
+  }
+}
+
+/* Performance: Optimize for different device capabilities */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices - reduce hover effects */
+  .artwork-bound-card:hover {
+    transform: none;
+  }
+  
+  .artwork-bound-card:active {
+    transform: translate3d(0, 0, 0) scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Performance: Optimize for low-end devices */
+@media (max-width: 768px) {
+  .artwork-bound-card {
+    /* Reduce will-change usage on mobile */
+    will-change: auto;
+  }
+  
+  .artwork-bound-card:hover,
+  .artwork-bound-card:focus-visible {
+    will-change: transform;
+  }
+  
+  .artwork-image {
+    /* Simpler transforms on mobile */
+    will-change: auto;
+  }
+  
+  .artwork-bound-card:hover .artwork-image {
+    will-change: transform;
+    transform: scale(1.05); /* Reduced scale for mobile */
+  }
+}
+
+/* Performance: Optimize animation cleanup */
+.artwork-bound-card.animation-ended {
+  will-change: auto;
+}
+
+.artwork-bound-card.animation-ended .artwork-image {
+  will-change: auto;
+}
+
+/* Accessibility: Ensure minimum touch targets */
+@media (max-width: 768px) {
+  .artwork-bound-card {
+    min-height: 44px; /* WCAG minimum touch target */
+    min-width: 44px;
+  }
+  
+  .artwork-bound-card .absolute.top-2.right-2,
+  .artwork-bound-card .absolute.top-2.left-2 {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Performance: Optimize for Safari */
+@supports (-webkit-appearance: none) {
+  .artwork-bound-card {
+    -webkit-transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+  }
+  
+  .artwork-image {
+    -webkit-transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+  }
 }

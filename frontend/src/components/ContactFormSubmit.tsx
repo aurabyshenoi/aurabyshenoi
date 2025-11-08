@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { Painting } from '../types/painting';
 
 interface ContactFormData {
   name: string;
   email: string;
   phone: string;
   message: string;
+  artworkReference?: string;
 }
 
 interface FormErrors {
@@ -15,6 +17,7 @@ interface FormErrors {
 interface ContactFormSubmitProps {
   onSubmitSuccess?: () => void;
   onSubmitError?: (error: string) => void;
+  artworkReference?: Painting;
 }
 
 interface ErrorState {
@@ -26,13 +29,17 @@ interface ErrorState {
 
 const ContactFormSubmit: React.FC<ContactFormSubmitProps> = ({
   onSubmitSuccess,
-  onSubmitError
+  onSubmitError,
+  artworkReference
 }) => {
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
     phone: '',
-    message: ''
+    message: artworkReference 
+      ? `I'm interested in learning more about "${artworkReference.title}". Please provide more information about this piece.`
+      : '',
+    artworkReference: artworkReference ? `${artworkReference.title} - ${artworkReference.medium} (${artworkReference.dimensions.width}" × ${artworkReference.dimensions.height}" ${artworkReference.dimensions.unit})` : undefined
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -223,11 +230,23 @@ const ContactFormSubmit: React.FC<ContactFormSubmitProps> = ({
     }
     formDataToSubmit.append('message', formData.message.trim());
     
+    // Add artwork reference if present
+    if (formData.artworkReference) {
+      formDataToSubmit.append('artwork_inquiry', formData.artworkReference);
+    }
+    
     // Basic FormSubmit configuration
-    formDataToSubmit.append('_subject', `Contact Form: ${formData.name.trim()}`);
+    const subject = formData.artworkReference 
+      ? `Artwork Inquiry: ${formData.name.trim()}` 
+      : `Contact Form: ${formData.name.trim()}`;
+    formDataToSubmit.append('_subject', subject);
     formDataToSubmit.append('_replyto', formData.email.toLowerCase().trim());
     formDataToSubmit.append('_captcha', 'false');
-    formDataToSubmit.append('_autoresponse', 'Thank you for contacting us! We will respond within 24-48 hours.');
+    
+    const autoResponse = formData.artworkReference
+      ? 'Thank you for your artwork inquiry! We will respond with more details about this piece within 24-48 hours.'
+      : 'Thank you for contacting us! We will respond within 24-48 hours.';
+    formDataToSubmit.append('_autoresponse', autoResponse);
     
     // Use FormSubmit's built-in templates instead of custom content
     if (useBasicTemplate) {
@@ -369,7 +388,10 @@ const ContactFormSubmit: React.FC<ContactFormSubmitProps> = ({
       name: '',
       email: '',
       phone: '',
-      message: ''
+      message: artworkReference 
+        ? `I'm interested in learning more about "${artworkReference.title}". Please provide more information about this piece.`
+        : '',
+      artworkReference: artworkReference ? `${artworkReference.title} - ${artworkReference.medium} (${artworkReference.dimensions.width}" × ${artworkReference.dimensions.height}" ${artworkReference.dimensions.unit})` : undefined
     });
     setErrors({});
   };
@@ -482,10 +504,23 @@ const ContactFormSubmit: React.FC<ContactFormSubmitProps> = ({
   return (
     <div className="bg-cream rounded-lg p-4 sm:p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-xl sm:text-2xl font-serif text-brown mb-2">Get in Touch</h2>
+        <h2 className="text-xl sm:text-2xl font-serif text-brown mb-2">
+          {artworkReference ? 'Artwork Inquiry' : 'Get in Touch'}
+        </h2>
         <p className="text-text-dark">
-          We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+          {artworkReference 
+            ? 'Fill out the form below to inquire about this artwork. We\'ll get back to you with more details.'
+            : 'We\'d love to hear from you. Send us a message and we\'ll respond as soon as possible.'
+          }
         </p>
+        
+        {artworkReference && (
+          <div className="mt-3 p-3 bg-sage-green bg-opacity-10 border border-sage-green border-opacity-20 rounded-md">
+            <p className="text-sm text-sage-green-dark font-medium">
+              Inquiring about: {artworkReference.title}
+            </p>
+          </div>
+        )}
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">

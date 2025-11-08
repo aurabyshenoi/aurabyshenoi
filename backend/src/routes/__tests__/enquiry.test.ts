@@ -9,12 +9,6 @@ app.use(express.json());
 app.use('/api/contact', contactRoutes);
 app.use('/api/paintings', paintingsRoutes);
 
-// Mock email service
-jest.mock('../../utils/emailService', () => ({
-  sendContactConfirmationEmail: jest.fn().mockResolvedValue(true),
-  sendContactNotificationEmail: jest.fn().mockResolvedValue(true)
-}));
-
 describe('Enquiry Processing and Price Calculation', () => {
   const mockPaintingData = {
     title: 'Beautiful Landscape',

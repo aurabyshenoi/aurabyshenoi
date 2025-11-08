@@ -4,8 +4,6 @@ import Footer from './Footer';
 
 interface LayoutProps {
   children: ReactNode;
-  cartItemCount?: number;
-  onCartClick?: () => void;
   onHomeClick?: () => void;
   onGalleryClick?: () => void;
   onAboutClick?: () => void;
@@ -15,8 +13,6 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
-  cartItemCount = 0, 
-  onCartClick,
   onHomeClick,
   onGalleryClick,
   onAboutClick,
@@ -35,8 +31,6 @@ const Layout: React.FC<LayoutProps> = ({
 
       {/* Header */}
       <Header 
-        cartItemCount={cartItemCount} 
-        onCartClick={onCartClick}
         onHomeClick={onHomeClick}
         onGalleryClick={onGalleryClick}
         onAboutClick={onAboutClick}

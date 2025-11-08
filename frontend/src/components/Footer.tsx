@@ -73,24 +73,24 @@ const Footer: React.FC = () => {
             
             {/* Quick Links */}
             <nav className="space-y-2" role="navigation" aria-label="Footer navigation">
-              <a 
-                href="/gallery"
-                className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm"
+              <button 
+                onClick={() => window.history.pushState({ page: 'gallery' }, '', '/gallery') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'gallery' } }))}
+                className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm text-left w-full"
               >
                 View Gallery
-              </a>
-              <a 
-                href="/about"
-                className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm"
+              </button>
+              <button 
+                onClick={() => window.history.pushState({ page: 'about' }, '', '/about') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'about' } }))}
+                className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm text-left w-full"
               >
                 About the Artist
-              </a>
-              <a 
-                href="/contact"
-                className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm"
+              </button>
+              <button 
+                onClick={() => window.history.pushState({ page: 'contact' }, '', '/contact') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'contact' } }))}
+                className="block text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm text-left w-full"
               >
                 Commission Work
-              </a>
+              </button>
             </nav>
 
             {/* Connect with Me Icons */}
@@ -128,18 +128,18 @@ const Footer: React.FC = () => {
             © {currentYear} AuraByShenoi. All rights reserved.
           </p>
           <div className="flex space-x-6 text-sm">
-            <a 
-              href="/privacy"
+            <button 
+              onClick={() => window.history.pushState({ page: 'privacy' }, '', '/privacy') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'privacy' } }))}
               className="text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm"
             >
               Privacy Policy
-            </a>
-            <a 
-              href="/terms"
+            </button>
+            <button 
+              onClick={() => window.history.pushState({ page: 'terms' }, '', '/terms') || window.dispatchEvent(new PopStateEvent('popstate', { state: { page: 'terms' } }))}
               className="text-text-light hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-off-white rounded-sm"
             >
               Terms of Service
-            </a>
+            </button>
           </div>
         </div>
       </div>

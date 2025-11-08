@@ -1,27 +1,15 @@
 import React from 'react';
 import { Layout, TestimonialSection } from './index';
-import { useCart } from '../contexts/CartContext';
 
 interface AboutProps {
-  onCartClick?: () => void;
   onGalleryClick?: () => void;
   onHomeClick?: () => void;
   onContactClick?: () => void;
 }
 
-const About: React.FC<AboutProps> = ({ onCartClick, onGalleryClick, onHomeClick, onContactClick }) => {
-  const { cart } = useCart();
-
-  const handleCartClick = () => {
-    if (onCartClick) {
-      onCartClick();
-    }
-  };
-
+const About: React.FC<AboutProps> = ({ onGalleryClick, onHomeClick, onContactClick }) => {
   return (
     <Layout 
-      cartItemCount={cart.totalItems} 
-      onCartClick={handleCartClick}
       onHomeClick={onHomeClick}
       onGalleryClick={onGalleryClick}
       onAboutClick={() => {}}
@@ -49,7 +37,7 @@ const About: React.FC<AboutProps> = ({ onCartClick, onGalleryClick, onHomeClick,
             {/* Artist Photo */}
             <div className="flex justify-center lg:justify-end">
               <div className="relative">
-                <div className="w-80 h-96 bg-warm-gray rounded-lg shadow-lg overflow-hidden">
+                <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl aspect-[4/3] bg-warm-gray rounded-lg shadow-lg overflow-hidden">
                   <img 
                     src="/artist-photo.jpeg" 
                     alt="Artist portrait in traditional attire with vibrant orange decorations and lush greenery in the background"
@@ -65,12 +53,12 @@ const About: React.FC<AboutProps> = ({ onCartClick, onGalleryClick, onHomeClick,
                   {/* Fallback placeholder (hidden by default) */}
                   <div className="w-full h-full bg-gradient-to-br from-sage-green-light to-sage-green flex items-center justify-center" style={{ display: 'none' }}>
                     <div className="text-center text-white">
-                      <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                         </svg>
                       </div>
-                      <p className="text-sm opacity-80">Artist Photo</p>
+                      <p className="text-xs sm:text-sm opacity-80">Artist Photo</p>
                     </div>
                   </div>
                 </div>
@@ -159,8 +147,8 @@ const About: React.FC<AboutProps> = ({ onCartClick, onGalleryClick, onHomeClick,
             </div>
           </div>
 
-          {/* Customer Testimonials Section */}
-          <div className="mb-16">
+          {/* Customer Testimonials Section - Hidden for now */}
+          <div className="mb-16 hidden">
             <TestimonialSection />
           </div>
 
@@ -172,14 +160,22 @@ const About: React.FC<AboutProps> = ({ onCartClick, onGalleryClick, onHomeClick,
               </h2>
               <p className="text-text-light mb-6 max-w-2xl mx-auto">
                 I invite you to browse my gallery and discover the paintings that speak to you. 
-                Each piece is available for purchase and comes with a certificate of authenticity.
+                Feel free to reach out if you'd like to learn more about any piece or discuss a commission.
               </p>
-              <button 
-                onClick={onGalleryClick}
-                className="bg-sage-green text-white px-8 py-3 rounded-md font-medium hover:bg-sage-green-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2"
-              >
-                View Gallery
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button 
+                  onClick={onGalleryClick}
+                  className="bg-sage-green text-white px-8 py-3 rounded-md font-medium hover:bg-sage-green-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2"
+                >
+                  View Gallery
+                </button>
+                <button 
+                  onClick={onContactClick}
+                  className="bg-brown text-white px-8 py-3 rounded-md font-medium hover:bg-brown-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brown focus:ring-offset-2"
+                >
+                  Get in Touch
+                </button>
+              </div>
             </div>
           </div>
         </div>

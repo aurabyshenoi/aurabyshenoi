@@ -32,3 +32,28 @@ export const apiRequest = async <T = any>(path: string, options?: RequestInit): 
   
   return response.json();
 };
+
+/**
+ * Subscribe to newsletter
+ */
+export const subscribeToNewsletter = async (email: string, source: string = 'homepage'): Promise<{
+  success: boolean;
+  message: string;
+  data?: { email: string; subscribedAt: Date };
+}> => {
+  const response = await apiFetch('/api/newsletter/subscribe', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, source }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to subscribe to newsletter');
+  }
+
+  return data;
+};

@@ -6,18 +6,15 @@ import { measureApiCall } from '../utils/performanceMonitor';
 const mockPaintings: Painting[] = [
   {
     _id: '1',
-    title: 'Sunset Over Mountains',
-    description: 'A breathtaking view of golden hour light cascading over mountain peaks, capturing the serene beauty of nature in warm, vibrant colors.',
+    title: '',
+    description: 'Pen Sketch',
     dimensions: { width: 24, height: 18, unit: 'inches' },
-    medium: 'Oil on Canvas',
+    medium: 'Pen Sketch',
     price: 850,
-    category: 'landscape',
+    category: 'Anime Sketches',
     images: {
-      thumbnail: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
-      fullSize: [
-        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=900&fit=crop'
-      ]
+      thumbnail: '/img1.jpeg',
+      fullSize: ['/img1.jpeg']
     },
     isAvailable: true,
     createdAt: '2024-01-15T10:00:00Z',
@@ -25,17 +22,15 @@ const mockPaintings: Painting[] = [
   },
   {
     _id: '2',
-    title: 'Ocean Waves',
-    description: 'Dynamic brushstrokes capture the power and movement of ocean waves crashing against rocky shores.',
+    title: '',
+    description: 'Pen Sketch',
     dimensions: { width: 30, height: 24, unit: 'inches' },
-    medium: 'Acrylic on Canvas',
+    medium: 'Pen Sketch',
     price: 1200,
-    category: 'seascape',
+    category: 'Penwork',
     images: {
-      thumbnail: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=400&fit=crop',
-      fullSize: [
-        'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800&h=600&fit=crop'
-      ]
+      thumbnail: '/img2.jpeg',
+      fullSize: ['/img2.jpeg']
     },
     isAvailable: true,
     createdAt: '2024-01-10T14:30:00Z',
@@ -43,18 +38,15 @@ const mockPaintings: Painting[] = [
   },
   {
     _id: '3',
-    title: 'Forest Path',
-    description: 'A peaceful woodland scene with dappled sunlight filtering through ancient trees, inviting the viewer to wander down the winding path.',
+    title: '',
+    description: 'Pen Sketch',
     dimensions: { width: 16, height: 20, unit: 'inches' },
-    medium: 'Watercolor',
+    medium: 'Pen Sketch',
     price: 450,
-    category: 'landscape',
+    category: 'Anime Sketches',
     images: {
-      thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=400&fit=crop',
-      fullSize: [
-        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=900&fit=crop'
-      ]
+      thumbnail: '/img3.jpeg',
+      fullSize: ['/img3.jpeg']
     },
     isAvailable: true,
     createdAt: '2024-01-05T09:15:00Z',
@@ -62,17 +54,15 @@ const mockPaintings: Painting[] = [
   },
   {
     _id: '4',
-    title: 'City Lights',
-    description: 'An urban nightscape showcasing the vibrant energy of city life through bold colors and dynamic composition.',
+    title: '',
+    description: 'Pencil Sketch',
     dimensions: { width: 36, height: 24, unit: 'inches' },
-    medium: 'Mixed Media',
+    medium: 'Pencil Sketch',
     price: 1800,
-    category: 'urban',
+    category: 'Hyperrealistic Sketch',
     images: {
-      thumbnail: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400&h=400&fit=crop',
-      fullSize: [
-        'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&h=600&fit=crop'
-      ]
+      thumbnail: '/img4.jpeg',
+      fullSize: ['/img4.jpeg']
     },
     isAvailable: false,
     createdAt: '2024-01-01T16:45:00Z',
@@ -80,18 +70,15 @@ const mockPaintings: Painting[] = [
   },
   {
     _id: '5',
-    title: 'Wildflower Meadow',
-    description: 'A celebration of spring with vibrant wildflowers dancing in a gentle breeze across an open meadow.',
+    title: '',
+    description: 'Pen Sketch',
     dimensions: { width: 20, height: 16, unit: 'inches' },
-    medium: 'Oil on Canvas',
+    medium: 'Pen Sketch',
     price: 650,
-    category: 'nature',
+    category: 'Anime Sketches',
     images: {
-      thumbnail: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=400&fit=crop',
-      fullSize: [
-        'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=1200&h=900&fit=crop'
-      ]
+      thumbnail: '/img5.jpeg',
+      fullSize: ['/img5.jpeg']
     },
     isAvailable: true,
     createdAt: '2023-12-28T11:20:00Z',
@@ -99,21 +86,115 @@ const mockPaintings: Painting[] = [
   },
   {
     _id: '6',
-    title: 'Abstract Harmony',
-    description: 'An exploration of color, form, and emotion through abstract expressionism, creating a sense of balance and movement.',
+    title: '',
+    description: 'Pen Sketch',
     dimensions: { width: 48, height: 36, unit: 'inches' },
-    medium: 'Acrylic on Canvas',
+    medium: 'Pen Sketch',
     price: 2200,
-    category: 'abstract',
+    category: 'Anime Sketches',
     images: {
-      thumbnail: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=400&fit=crop',
-      fullSize: [
-        'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=600&fit=crop'
-      ]
+      thumbnail: '/img6.jpeg',
+      fullSize: ['/img6.jpeg']
     },
     isAvailable: true,
     createdAt: '2023-12-20T13:10:00Z',
     updatedAt: '2023-12-20T13:10:00Z'
+  },
+  {
+    _id: '7',
+    title: '',
+    description: 'Acrylic Canvas Painting',
+    dimensions: { width: 28, height: 22, unit: 'inches' },
+    medium: 'Acrylic Canvas Painting',
+    price: 950,
+    category: 'Anime Painting',
+    images: {
+      thumbnail: '/img7.jpeg',
+      fullSize: ['/img7.jpeg']
+    },
+    isAvailable: true,
+    createdAt: '2023-12-15T08:30:00Z',
+    updatedAt: '2023-12-15T08:30:00Z'
+  },
+  {
+    _id: '8',
+    title: '',
+    description: 'Acrylic Canvas Painting',
+    dimensions: { width: 32, height: 24, unit: 'inches' },
+    medium: 'Acrylic Canvas Painting',
+    price: 1350,
+    category: 'Murals',
+    images: {
+      thumbnail: '/img8.jpeg',
+      fullSize: ['/img8.jpeg']
+    },
+    isAvailable: true,
+    createdAt: '2023-12-10T15:45:00Z',
+    updatedAt: '2023-12-10T15:45:00Z'
+  },
+  {
+    _id: '9',
+    title: '',
+    description: 'Acrylic Canvas Painting',
+    dimensions: { width: 18, height: 24, unit: 'inches' },
+    medium: 'Acrylic Canvas Painting',
+    price: 520,
+    category: 'Abstract Art',
+    images: {
+      thumbnail: '/img9.jpeg',
+      fullSize: ['/img9.jpeg']
+    },
+    isAvailable: true,
+    createdAt: '2023-12-05T12:20:00Z',
+    updatedAt: '2023-12-05T12:20:00Z'
+  },
+  {
+    _id: '10',
+    title: '',
+    description: 'Acrylic Canvas Painting',
+    dimensions: { width: 40, height: 30, unit: 'inches' },
+    medium: 'Acrylic Canvas Painting',
+    price: 1650,
+    category: 'Abstract Art',
+    images: {
+      thumbnail: '/img10.jpeg',
+      fullSize: ['/img10.jpeg']
+    },
+    isAvailable: true,
+    createdAt: '2023-11-30T14:15:00Z',
+    updatedAt: '2023-11-30T14:15:00Z'
+  },
+  {
+    _id: '11',
+    title: '',
+    description: 'Acrylic Canvas Painting',
+    dimensions: { width: 36, height: 48, unit: 'inches' },
+    medium: 'Acrylic Canvas Painting',
+    price: 1950,
+    category: 'Abstract Art',
+    images: {
+      thumbnail: '/img11.jpeg',
+      fullSize: ['/img11.jpeg']
+    },
+    isAvailable: false,
+    createdAt: '2023-11-25T10:00:00Z',
+    updatedAt: '2023-11-25T10:00:00Z'
+  },
+  {
+    _id: '12',
+    title: '',
+    description: 'Acrylic Canvas Painting',
+    dimensions: { width: 26, height: 20, unit: 'inches' },
+    medium: 'Acrylic Canvas Painting',
+    price: 780,
+    category: 'Murals',
+    images: {
+      thumbnail: '/img12.jpeg',
+      fullSize: ['/img12.jpeg']
+    },
+    isAvailable: true,
+    createdAt: '2023-11-20T16:30:00Z',
+    updatedAt: '2023-11-20T16:30:00Z'
   }
 ];
 

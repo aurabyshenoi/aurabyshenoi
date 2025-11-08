@@ -48,3 +48,5 @@ Thumbs.db
 
 # Email previews (development only)
 backend/email-previews/
+# Local Netlify folder
+.netlify

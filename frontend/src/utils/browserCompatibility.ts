@@ -1,24 +1,458 @@
 /**
- * Browser Compatibility Utilities for Featured Artwork Gallery
- * Provides fallbacks and feature detection for cross-browser support
+ * Browser Compatibility Testing Utilities
+ * Provides cross-browser testing and compatibility checks for React Bits Masonry Gallery
  */
 
-export interface BrowserSupport {
-  cssGrid: boolean;
-  transforms: boolean;
-  transitions: boolean;
-  touchEvents: boolean;
-  intersectionObserver: boolean;
-  webp: boolean;
+export interface BrowserInfo {
+  name: string;
+  version: string;
+  engine: string;
+  isSupported: boolean;
+  features: BrowserFeatures;
 }
 
+export interface BrowserFeatures {
+  cssGrid: boolean;
+  flexbox: boolean;
+  transforms3d: boolean;
+  willChange: boolean;
+  intersectionObserver: boolean;
+  framerMotion: boolean;
+  backdropFilter: boolean;
+  customProperties: boolean;
+  objectFit: boolean;
+  aspectRatio: boolean;
+}
+
+export interface CompatibilityReport {
+  browser: BrowserInfo;
+  masonrySupport: boolean;
+  animationSupport: boolean;
+  performanceOptimizations: string[];
+  warnings: string[];
+  fallbacks: string[];
+}
+
+/**
+ * Detect current browser and version
+ */
+export const detectBrowser = (): BrowserInfo => {
+  const userAgent = navigator.userAgent;
+  const vendor = navigator.vendor;
+  
+  let name = 'Unknown';
+  let version = 'Unknown';
+  let engine = 'Unknown';
+  
+  // Chrome
+  if (/Chrome/.test(userAgent) && /Google Inc/.test(vendor)) {
+    name = 'Chrome';
+    const match = userAgent.match(/Chrome\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+    engine = 'Blink';
+  }
+  // Firefox
+  else if (/Firefox/.test(userAgent)) {
+    name = 'Firefox';
+    const match = userAgent.match(/Firefox\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+    engine = 'Gecko';
+  }
+  // Safari
+  else if (/Safari/.test(userAgent) && /Apple Computer/.test(vendor)) {
+    name = 'Safari';
+    const match = userAgent.match(/Version\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+    engine = 'WebKit';
+  }
+  // Edge
+  else if (/Edg/.test(userAgent)) {
+    name = 'Edge';
+    const match = userAgent.match(/Edg\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+    engine = 'Blink';
+  }
+  
+  const features = detectBrowserFeatures();
+  const isSupported = checkBrowserSupport(name, version, features);
+  
+  return {
+    name,
+    version,
+    engine,
+    isSupported,
+    features
+  };
+};
+
+/**
+ * Detect browser feature support
+ */
+export const detectBrowserFeatures = (): BrowserFeatures => {
+  const testElement = document.createElement('div');
+  
+  return {
+    cssGrid: CSS.supports('display', 'grid'),
+    flexbox: CSS.supports('display', 'flex'),
+    transforms3d: CSS.supports('transform', 'translate3d(0, 0, 0)'),
+    willChange: CSS.supports('will-change', 'transform'),
+    intersectionObserver: 'IntersectionObserver' in window,
+    framerMotion: checkFramerMotionSupport(),
+    backdropFilter: CSS.supports('backdrop-filter', 'blur(10px)'),
+    customProperties: CSS.supports('color', 'var(--test)'),
+    objectFit: CSS.supports('object-fit', 'cover'),
+    aspectRatio: CSS.supports('aspect-ratio', '1 / 1')
+  };
+};
+
+/**
+ * Check if Framer Motion is supported
+ */
+const checkFramerMotionSupport = (): boolean => {
+  try {
+    // Check if the browser supports the features Framer Motion needs
+    return (
+      'requestAnimationFrame' in window &&
+      'performance' in window &&
+      CSS.supports('transform', 'translateX(0px)') &&
+      CSS.supports('opacity', '0')
+    );
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Check if browser is supported for React Bits Masonry Gallery
+ */
+export const checkBrowserSupport = (
+  browserName: string, 
+  version: string, 
+  features: BrowserFeatures
+): boolean => {
+  const versionNum = parseInt(version, 10);
+  
+  // Minimum version requirements
+  const minVersions: Record<string, number> = {
+    Chrome: 60,
+    Firefox: 55,
+    Safari: 12,
+    Edge: 79
+  };
+  
+  const minVersion = minVersions[browserName];
+  if (minVersion && versionNum < minVersion) {
+    return false;
+  }
+  
+  // Essential features required
+  const requiredFeatures: (keyof BrowserFeatures)[] = [
+    'flexbox',
+    'transforms3d',
+    'customProperties',
+    'intersectionObserver'
+  ];
+  
+  return requiredFeatures.every(feature => features[feature]);
+};
+
+/**
+ * Generate comprehensive compatibility report
+ */
+export const generateCompatibilityReport = (): CompatibilityReport => {
+  const browser = detectBrowser();
+  const warnings: string[] = [];
+  const fallbacks: string[] = [];
+  const performanceOptimizations: string[] = [];
+  
+  // Check masonry layout support
+  const masonrySupport = browser.features.flexbox && browser.features.customProperties;
+  if (!masonrySupport) {
+    warnings.push('Masonry layout may not render correctly');
+    fallbacks.push('Single column layout fallback will be used');
+  }
+  
+  // Check animation support
+  const animationSupport = browser.features.transforms3d && browser.features.framerMotion;
+  if (!animationSupport) {
+    warnings.push('Animations may be reduced or disabled');
+    fallbacks.push('Static card layout without animations');
+  }
+  
+  // Browser-specific optimizations
+  if (browser.name === 'Safari') {
+    performanceOptimizations.push('WebKit-specific transform optimizations enabled');
+    if (!browser.features.backdropFilter) {
+      warnings.push('Backdrop filter effects not supported');
+      fallbacks.push('Solid background fallback for overlays');
+    }
+  }
+  
+  if (browser.name === 'Firefox') {
+    performanceOptimizations.push('Gecko-specific animation optimizations enabled');
+    if (!browser.features.willChange) {
+      warnings.push('will-change property not supported');
+      fallbacks.push('Manual layer creation for animations');
+    }
+  }
+  
+  if (browser.name === 'Chrome' || browser.name === 'Edge') {
+    performanceOptimizations.push('Blink engine optimizations enabled');
+    performanceOptimizations.push('Hardware acceleration optimized');
+  }
+  
+  // Performance optimizations based on features
+  if (browser.features.willChange) {
+    performanceOptimizations.push('will-change property optimization enabled');
+  }
+  
+  if (browser.features.transforms3d) {
+    performanceOptimizations.push('3D transform hardware acceleration enabled');
+  }
+  
+  if (browser.features.intersectionObserver) {
+    performanceOptimizations.push('Intersection Observer for lazy loading enabled');
+  }
+  
+  return {
+    browser,
+    masonrySupport,
+    animationSupport,
+    performanceOptimizations,
+    warnings,
+    fallbacks
+  };
+};
+
+/**
+ * Apply browser-specific CSS classes to document
+ */
+export const applyBrowserSpecificStyles = (): void => {
+  const browser = detectBrowser();
+  const documentElement = document.documentElement;
+  
+  // Remove existing browser classes
+  documentElement.classList.remove(
+    'browser-chrome', 'browser-firefox', 'browser-safari', 'browser-edge',
+    'engine-blink', 'engine-gecko', 'engine-webkit',
+    'supports-backdrop-filter', 'supports-will-change', 'supports-object-fit'
+  );
+  
+  // Add browser-specific classes
+  documentElement.classList.add(`browser-${browser.name.toLowerCase()}`);
+  documentElement.classList.add(`engine-${browser.engine.toLowerCase()}`);
+  
+  // Add feature support classes
+  if (browser.features.backdropFilter) {
+    documentElement.classList.add('supports-backdrop-filter');
+  }
+  
+  if (browser.features.willChange) {
+    documentElement.classList.add('supports-will-change');
+  }
+  
+  if (browser.features.objectFit) {
+    documentElement.classList.add('supports-object-fit');
+  }
+  
+  if (!browser.features.transforms3d) {
+    documentElement.classList.add('no-transforms3d');
+  }
+  
+  if (!browser.features.intersectionObserver) {
+    documentElement.classList.add('no-intersection-observer');
+  }
+};
+
+/**
+ * Test masonry layout rendering across browsers
+ */
+export const testMasonryLayoutRendering = (): Promise<{
+  success: boolean;
+  errors: string[];
+  warnings: string[];
+}> => {
+  return new Promise((resolve) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    try {
+      // Create test masonry container
+      const testContainer = document.createElement('div');
+      testContainer.className = 'masonry-gallery-container';
+      testContainer.style.position = 'absolute';
+      testContainer.style.top = '-9999px';
+      testContainer.style.left = '-9999px';
+      testContainer.style.width = '600px';
+      testContainer.style.height = '400px';
+      
+      // Create test columns
+      for (let i = 0; i < 3; i++) {
+        const column = document.createElement('div');
+        column.className = 'masonry-column';
+        
+        // Create test cards
+        for (let j = 0; j < 2; j++) {
+          const card = document.createElement('div');
+          card.className = 'artwork-bound-card variant-medium';
+          card.style.height = '200px';
+          column.appendChild(card);
+        }
+        
+        testContainer.appendChild(column);
+      }
+      
+      document.body.appendChild(testContainer);
+      
+      // Test layout calculations
+      setTimeout(() => {
+        const containerRect = testContainer.getBoundingClientRect();
+        const columns = testContainer.querySelectorAll('.masonry-column');
+        
+        // Verify container layout
+        if (containerRect.width === 0 || containerRect.height === 0) {
+          errors.push('Masonry container failed to render');
+        }
+        
+        // Verify column layout
+        if (columns.length !== 3) {
+          errors.push('Incorrect number of masonry columns rendered');
+        }
+        
+        columns.forEach((column, index) => {
+          const columnRect = column.getBoundingClientRect();
+          if (columnRect.width === 0) {
+            errors.push(`Column ${index + 1} failed to render properly`);
+          }
+        });
+        
+        // Test flexbox layout
+        const computedStyle = window.getComputedStyle(testContainer);
+        if (computedStyle.display !== 'flex') {
+          warnings.push('Flexbox layout not applied correctly');
+        }
+        
+        // Cleanup
+        document.body.removeChild(testContainer);
+        
+        resolve({
+          success: errors.length === 0,
+          errors,
+          warnings
+        });
+      }, 100);
+      
+    } catch (error) {
+      errors.push(`Layout test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      resolve({
+        success: false,
+        errors,
+        warnings
+      });
+    }
+  });
+};
+
+/**
+ * Test bound card animations across browsers
+ */
+export const testBoundCardAnimations = (): Promise<{
+  success: boolean;
+  errors: string[];
+  warnings: string[];
+}> => {
+  return new Promise((resolve) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    try {
+      // Create test card
+      const testCard = document.createElement('div');
+      testCard.className = 'artwork-bound-card variant-medium';
+      testCard.style.position = 'absolute';
+      testCard.style.top = '-9999px';
+      testCard.style.left = '-9999px';
+      testCard.style.width = '200px';
+      testCard.style.height = '200px';
+      
+      document.body.appendChild(testCard);
+      
+      // Test transform support
+      testCard.style.transform = 'translate3d(10px, 10px, 0) scale(1.05)';
+      const computedTransform = window.getComputedStyle(testCard).transform;
+      
+      if (computedTransform === 'none' || !computedTransform.includes('matrix')) {
+        warnings.push('3D transforms may not be supported');
+      }
+      
+      // Test transition support
+      testCard.style.transition = 'transform 0.3s ease';
+      const computedTransition = window.getComputedStyle(testCard).transition;
+      
+      if (!computedTransition.includes('transform')) {
+        warnings.push('CSS transitions may not work correctly');
+      }
+      
+      // Test hover effects
+      testCard.classList.add('hover-test');
+      const hoverStyles = window.getComputedStyle(testCard, ':hover');
+      
+      // Cleanup
+      document.body.removeChild(testCard);
+      
+      resolve({
+        success: errors.length === 0,
+        errors,
+        warnings
+      });
+      
+    } catch (error) {
+      errors.push(`Animation test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      resolve({
+        success: false,
+        errors,
+        warnings
+      });
+    }
+  });
+};
+
+/**
+ * Run comprehensive cross-browser tests
+ */
+export const runCrossBrowserTests = async (): Promise<{
+  compatibilityReport: CompatibilityReport;
+  layoutTest: Awaited<ReturnType<typeof testMasonryLayoutRendering>>;
+  animationTest: Awaited<ReturnType<typeof testBoundCardAnimations>>;
+  overallSuccess: boolean;
+}> => {
+  const compatibilityReport = generateCompatibilityReport();
+  const layoutTest = await testMasonryLayoutRendering();
+  const animationTest = await testBoundCardAnimations();
+  
+  const overallSuccess = 
+    compatibilityReport.browser.isSupported &&
+    compatibilityReport.masonrySupport &&
+    layoutTest.success &&
+    animationTest.success;
+  
+  return {
+    compatibilityReport,
+    layoutTest,
+    animationTest,
+    overallSuccess
+  };
+};
+
+/**
+ * Browser compatibility class for managing browser-specific functionality
+ */
 export class BrowserCompatibility {
   private static instance: BrowserCompatibility;
-  private support: BrowserSupport;
+  private browserInfo: BrowserInfo;
 
   private constructor() {
-    this.support = this.detectFeatures();
-    this.applyFallbacks();
+    this.browserInfo = detectBrowser();
   }
 
   public static getInstance(): BrowserCompatibility {
@@ -28,433 +462,123 @@ export class BrowserCompatibility {
     return BrowserCompatibility.instance;
   }
 
-  /**
-   * Detect browser feature support
-   */
-  private detectFeatures(): BrowserSupport {
+  public static initialize(): void {
+    BrowserCompatibility.getInstance();
+    applyBrowserSpecificStyles();
+  }
+
+  public isSupported(feature: keyof BrowserFeatures | 'touchEvents'): boolean {
+    if (feature === 'touchEvents') {
+      return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    }
+    return this.browserInfo.features[feature];
+  }
+
+  public getSupport(): Record<string, boolean> {
     return {
-      cssGrid: this.supportsCSSGrid(),
-      transforms: this.supportsTransforms(),
-      transitions: this.supportsTransitions(),
-      touchEvents: this.supportsTouchEvents(),
-      intersectionObserver: this.supportsIntersectionObserver(),
-      webp: false // Will be detected asynchronously
+      ...this.browserInfo.features,
+      touchEvents: this.isSupported('touchEvents')
     };
   }
 
-  /**
-   * Check CSS Grid support
-   */
-  private supportsCSSGrid(): boolean {
-    const testElement = document.createElement('div');
-    testElement.style.display = 'grid';
-    return testElement.style.display === 'grid';
-  }
-
-  /**
-   * Check CSS Transform support
-   */
-  private supportsTransforms(): boolean {
-    const testElement = document.createElement('div');
-    const transforms = [
-      'transform',
-      'WebkitTransform',
-      'MozTransform',
-      'msTransform',
-      'OTransform'
-    ];
-    
-    return transforms.some(transform => {
-      testElement.style[transform as any] = 'scale(1)';
-      return testElement.style[transform as any] !== '';
-    });
-  }
-
-  /**
-   * Check CSS Transition support
-   */
-  private supportsTransitions(): boolean {
-    const testElement = document.createElement('div');
-    const transitions = [
-      'transition',
-      'WebkitTransition',
-      'MozTransition',
-      'msTransition',
-      'OTransition'
-    ];
-    
-    return transitions.some(transition => {
-      testElement.style[transition as any] = 'all 0.3s ease';
-      return testElement.style[transition as any] !== '';
-    });
-  }
-
-  /**
-   * Check touch event support
-   */
-  private supportsTouchEvents(): boolean {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  }
-
-  /**
-   * Check Intersection Observer support
-   */
-  private supportsIntersectionObserver(): boolean {
-    return 'IntersectionObserver' in window;
-  }
-
-  /**
-   * Detect WebP support asynchronously
-   */
-  public async detectWebPSupport(): Promise<boolean> {
-    return new Promise((resolve) => {
-      const webP = new Image();
-      webP.onload = webP.onerror = () => {
-        const isSupported = webP.height === 2;
-        this.support.webp = isSupported;
-        resolve(isSupported);
-      };
-      webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
-    });
-  }
-
-  /**
-   * Apply fallbacks for unsupported features
-   */
-  private applyFallbacks(): void {
-    // CSS Grid fallback
-    if (!this.support.cssGrid) {
-      this.applyCSSGridFallback();
-    }
-
-    // Transform fallback
-    if (!this.support.transforms) {
-      this.applyTransformFallback();
-    }
-
-    // Transition fallback
-    if (!this.support.transitions) {
-      this.applyTransitionFallback();
-    }
-
-    // Touch event fallback
-    if (!this.support.touchEvents) {
-      this.applyTouchFallback();
-    }
-  }
-
-  /**
-   * Apply CSS Grid fallback using flexbox
-   */
-  private applyCSSGridFallback(): void {
-    const style = document.createElement('style');
-    style.textContent = `
-      .gallery-collage {
-        display: flex !important;
-        flex-wrap: wrap;
-        justify-content: space-between;
-      }
-      
-      .gallery-item {
-        flex: 0 0 calc(25% - 12px);
-        margin-bottom: 15px;
-        height: 200px;
-      }
-      
-      .gallery-item.size-large {
-        flex: 0 0 calc(50% - 8px);
-        height: 415px;
-      }
-      
-      .gallery-item.size-wide {
-        flex: 0 0 calc(50% - 8px);
-        height: 200px;
-      }
-      
-      .gallery-item.size-medium,
-      .gallery-item.size-tall {
-        flex: 0 0 calc(25% - 12px);
-        height: 415px;
-      }
-      
-      .gallery-item.size-small {
-        flex: 0 0 calc(25% - 12px);
-        height: 200px;
-      }
-      
-      @media (max-width: 768px) {
-        .gallery-item {
-          flex: 0 0 calc(50% - 8px);
-          height: 150px;
-        }
-        
-        .gallery-item.size-large {
-          flex: 0 0 100%;
-          height: 300px;
-        }
-        
-        .gallery-item.size-wide {
-          flex: 0 0 100%;
-          height: 150px;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    // Add fallback class to body
-    document.body.classList.add('no-css-grid');
-  }
-
-  /**
-   * Apply transform fallback using positioning
-   */
-  private applyTransformFallback(): void {
-    const style = document.createElement('style');
-    style.textContent = `
-      .no-transforms .gallery-item:hover .gallery-image {
-        transform: none !important;
-        position: relative;
-        z-index: 10;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      }
-      
-      .no-transforms .modal-close:hover,
-      .no-transforms .nav-arrow:hover {
-        transform: none !important;
-        background: white;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      }
-    `;
-    document.head.appendChild(style);
-    document.body.classList.add('no-transforms');
-  }
-
-  /**
-   * Apply transition fallback
-   */
-  private applyTransitionFallback(): void {
-    const style = document.createElement('style');
-    style.textContent = `
-      .no-transitions * {
-        transition: none !important;
-        -webkit-transition: none !important;
-        -moz-transition: none !important;
-        -ms-transition: none !important;
-        -o-transition: none !important;
-      }
-    `;
-    document.head.appendChild(style);
-    document.body.classList.add('no-transitions');
-  }
-
-  /**
-   * Apply touch event fallback using mouse events
-   */
-  private applyTouchFallback(): void {
-    // Add mouse event listeners as fallback for touch events
-    document.body.classList.add('no-touch');
-    
-    // This will be handled in the gallery manager
-    // by checking for touch support before adding touch listeners
-  }
-
-  /**
-   * Get browser support information
-   */
-  public getSupport(): BrowserSupport {
-    return { ...this.support };
-  }
-
-  /**
-   * Check if a specific feature is supported
-   */
-  public isSupported(feature: keyof BrowserSupport): boolean {
-    return this.support[feature];
-  }
-
-  /**
-   * Add vendor prefixes for CSS properties
-   */
-  public addVendorPrefixes(element: HTMLElement, property: string, value: string): void {
-    const prefixes = ['', '-webkit-', '-moz-', '-ms-', '-o-'];
-    
-    prefixes.forEach(prefix => {
-      const prefixedProperty = prefix + property;
-      try {
-        (element.style as any)[this.camelCase(prefixedProperty)] = value;
-      } catch (e) {
-        // Ignore unsupported properties
-      }
-    });
-  }
-
-  /**
-   * Convert kebab-case to camelCase
-   */
-  private camelCase(str: string): string {
-    return str.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
-  }
-
-  /**
-   * Polyfill for older browsers
-   */
-  public loadPolyfills(): void {
-    // Object.assign polyfill for IE
-    if (!Object.assign) {
-      Object.assign = function(target: any, ...sources: any[]) {
-        if (target == null) {
-          throw new TypeError('Cannot convert undefined or null to object');
-        }
-        
-        const to = Object(target);
-        
-        for (let index = 0; index < sources.length; index++) {
-          const nextSource = sources[index];
-          
-          if (nextSource != null) {
-            for (const nextKey in nextSource) {
-              if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
-                to[nextKey] = nextSource[nextKey];
-              }
-            }
-          }
-        }
-        return to;
-      };
-    }
-
-    // Array.from polyfill for IE
-    if (!Array.from) {
-      Array.from = function(arrayLike: any, mapFn?: any, thisArg?: any) {
-        const C = this;
-        const items = Object(arrayLike);
-        if (arrayLike == null) {
-          throw new TypeError('Array.from requires an array-like object - not null or undefined');
-        }
-        
-        const mapFunction = mapFn === undefined ? undefined : mapFn;
-        if (typeof mapFunction !== 'undefined' && typeof mapFunction !== 'function') {
-          throw new TypeError('Array.from: when provided, the second argument must be a function');
-        }
-        
-        const len = parseInt(items.length);
-        const A = typeof C === 'function' ? Object(new C(len)) : new Array(len);
-        
-        let k = 0;
-        let kValue;
-        while (k < len) {
-          kValue = items[k];
-          if (mapFunction) {
-            A[k] = typeof thisArg === 'undefined' ? mapFunction(kValue, k) : mapFunction.call(thisArg, kValue, k);
-          } else {
-            A[k] = kValue;
-          }
-          k += 1;
-        }
-        A.length = len;
-        return A;
-      };
-    }
-
-    // NodeList.forEach polyfill for IE
-    if (window.NodeList && !NodeList.prototype.forEach) {
-      NodeList.prototype.forEach = Array.prototype.forEach;
-    }
-  }
-
-  /**
-   * Initialize browser compatibility checks and fallbacks
-   */
-  public static initialize(): BrowserCompatibility {
-    const instance = BrowserCompatibility.getInstance();
-    instance.loadPolyfills();
-    
-    // Detect WebP support asynchronously
-    instance.detectWebPSupport().then(supported => {
-      if (supported) {
-        document.body.classList.add('webp-supported');
-      } else {
-        document.body.classList.add('no-webp');
-      }
-    });
-    
-    return instance;
+  public getBrowserInfo(): BrowserInfo {
+    return this.browserInfo;
   }
 }
 
 /**
- * Browser-specific CSS fixes
+ * Apply browser-specific fixes and optimizations
  */
 export const applyBrowserSpecificFixes = (): void => {
-  const userAgent = navigator.userAgent.toLowerCase();
+  const browser = detectBrowser();
+  
+  // Apply browser-specific CSS classes
+  applyBrowserSpecificStyles();
   
   // Safari-specific fixes
-  if (userAgent.includes('safari') && !userAgent.includes('chrome')) {
-    document.body.classList.add('browser-safari');
-    
-    const style = document.createElement('style');
-    style.textContent = `
-      .browser-safari .gallery-image {
-        -webkit-backface-visibility: hidden;
-        -webkit-transform: translateZ(0);
-      }
-      
-      .browser-safari .modal-viewer {
-        -webkit-overflow-scrolling: touch;
-      }
-    `;
-    document.head.appendChild(style);
+  if (browser.name === 'Safari') {
+    // Fix for Safari's backdrop-filter issues
+    if (!browser.features.backdropFilter) {
+      document.documentElement.classList.add('no-backdrop-filter');
+    }
   }
   
   // Firefox-specific fixes
-  if (userAgent.includes('firefox')) {
-    document.body.classList.add('browser-firefox');
-    
-    const style = document.createElement('style');
-    style.textContent = `
-      .browser-firefox .gallery-item {
-        -moz-osx-font-smoothing: grayscale;
-      }
-    `;
-    document.head.appendChild(style);
+  if (browser.name === 'Firefox') {
+    // Fix for Firefox's will-change issues
+    if (!browser.features.willChange) {
+      document.documentElement.classList.add('no-will-change');
+    }
   }
   
-  // Edge-specific fixes
-  if (userAgent.includes('edge')) {
-    document.body.classList.add('browser-edge');
-    
-    const style = document.createElement('style');
-    style.textContent = `
-      .browser-edge .gallery-collage {
-        -ms-grid-columns: 1fr 1fr 1fr 1fr;
-        -ms-grid-rows: 200px 200px 200px 200px;
-      }
-    `;
-    document.head.appendChild(style);
+  // Mobile-specific fixes
+  if (/Mobi|Android/i.test(navigator.userAgent)) {
+    document.documentElement.classList.add('mobile-device');
+  }
+};
+
+/**
+ * Log cross-browser test results to console
+ */
+export const logCrossBrowserTestResults = (results: Awaited<ReturnType<typeof runCrossBrowserTests>>): void => {
+  console.group('🌐 Cross-Browser Compatibility Test Results');
+  
+  console.group('📊 Browser Information');
+  console.log(`Browser: ${results.compatibilityReport.browser.name} ${results.compatibilityReport.browser.version}`);
+  console.log(`Engine: ${results.compatibilityReport.browser.engine}`);
+  console.log(`Supported: ${results.compatibilityReport.browser.isSupported ? '✅' : '❌'}`);
+  console.groupEnd();
+  
+  console.group('🎨 Feature Support');
+  Object.entries(results.compatibilityReport.browser.features).forEach(([feature, supported]) => {
+    console.log(`${feature}: ${supported ? '✅' : '❌'}`);
+  });
+  console.groupEnd();
+  
+  console.group('🏗️ Layout Test');
+  console.log(`Success: ${results.layoutTest.success ? '✅' : '❌'}`);
+  if (results.layoutTest.errors.length > 0) {
+    console.error('Errors:', results.layoutTest.errors);
+  }
+  if (results.layoutTest.warnings.length > 0) {
+    console.warn('Warnings:', results.layoutTest.warnings);
+  }
+  console.groupEnd();
+  
+  console.group('🎭 Animation Test');
+  console.log(`Success: ${results.animationTest.success ? '✅' : '❌'}`);
+  if (results.animationTest.errors.length > 0) {
+    console.error('Errors:', results.animationTest.errors);
+  }
+  if (results.animationTest.warnings.length > 0) {
+    console.warn('Warnings:', results.animationTest.warnings);
+  }
+  console.groupEnd();
+  
+  if (results.compatibilityReport.performanceOptimizations.length > 0) {
+    console.group('⚡ Performance Optimizations');
+    results.compatibilityReport.performanceOptimizations.forEach(opt => {
+      console.log(`• ${opt}`);
+    });
+    console.groupEnd();
   }
   
-  // Internet Explorer fixes
-  if (userAgent.includes('trident') || userAgent.includes('msie')) {
-    document.body.classList.add('browser-ie');
-    
-    const style = document.createElement('style');
-    style.textContent = `
-      .browser-ie .gallery-collage {
-        display: -ms-flexbox !important;
-        -ms-flex-wrap: wrap;
-        -ms-flex-pack: justify;
-      }
-      
-      .browser-ie .gallery-item {
-        -ms-flex: 0 0 calc(25% - 12px);
-      }
-      
-      .browser-ie .modal-viewer {
-        display: -ms-flexbox;
-        -ms-flex-align: center;
-        -ms-flex-pack: center;
-      }
-    `;
-    document.head.appendChild(style);
+  if (results.compatibilityReport.warnings.length > 0) {
+    console.group('⚠️ Warnings');
+    results.compatibilityReport.warnings.forEach(warning => {
+      console.warn(`• ${warning}`);
+    });
+    console.groupEnd();
   }
+  
+  if (results.compatibilityReport.fallbacks.length > 0) {
+    console.group('🔄 Fallbacks');
+    results.compatibilityReport.fallbacks.forEach(fallback => {
+      console.log(`• ${fallback}`);
+    });
+    console.groupEnd();
+  }
+  
+  console.log(`\n🎯 Overall Success: ${results.overallSuccess ? '✅' : '❌'}`);
+  console.groupEnd();
 };

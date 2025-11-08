@@ -79,46 +79,13 @@ export class GalleryErrorHandler {
     // In a real application, this would send to an error reporting service
     console.error('Critical Gallery Error:', error);
     
-    // Show user-friendly error message
-    this.showUserError(error);
-  }
-
-  /**
-   * Show user-friendly error message
-   */
-  private showUserError(error: GalleryError): void {
-    const errorContainer = document.createElement('div');
-    errorContainer.className = 'gallery-error-notification';
-    errorContainer.innerHTML = `
-      <div class="error-content">
-        <span class="error-icon">⚠️</span>
-        <span class="error-message">Gallery temporarily unavailable. Please refresh the page.</span>
-        <button class="error-close" onclick="this.parentElement.parentElement.remove()">×</button>
-      </div>
-    `;
-
-    // Add styles
-    errorContainer.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #fee;
-      border: 1px solid #fcc;
-      border-radius: 4px;
-      padding: 12px;
-      z-index: 10000;
-      max-width: 300px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    `;
-
-    document.body.appendChild(errorContainer);
-
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-      if (errorContainer.parentElement) {
-        errorContainer.remove();
-      }
-    }, 5000);
+    // Log error details to console instead of showing popup
+    console.error('Gallery Error Details:', {
+      type: error.type,
+      message: error.message,
+      timestamp: new Date(error.timestamp).toISOString(),
+      context: error.context
+    });
   }
 
   /**

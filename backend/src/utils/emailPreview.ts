@@ -1,69 +1,33 @@
-import { IOrder } from '../models/Order';
+import { IContact } from '../models/Contact';
 import {
-  OrderConfirmationData,
-  generateOrderConfirmationHTML,
-  generateOrderStatusUpdateHTML
+  generateContactConfirmationHTML,
+  generateContactNotificationHTML
 } from '../templates/emailTemplates';
 
-// Mock order data for testing email templates
-const mockOrder: IOrder = {
+// Mock contact data for testing email templates
+const mockContact: IContact = {
   _id: '507f1f77bcf86cd799439011' as any,
-  orderNumber: 'ART-2024-001',
-  items: [
-    {
-      paintingId: '507f1f77bcf86cd799439012' as any,
-      title: 'Sunset Over Mountains',
-      price: 450.00,
-      image: 'https://res.cloudinary.com/demo/image/upload/c_fill,w_400,h_400/sample.jpg'
-    },
-    {
-      paintingId: '507f1f77bcf86cd799439013' as any,
-      title: 'Ocean Waves',
-      price: 320.00,
-      image: 'https://res.cloudinary.com/demo/image/upload/c_fill,w_400,h_400/sample2.jpg'
-    }
-  ],
+  contactNumber: 'CNT-2024-001',
   customer: {
-    name: 'Jane Smith',
+    fullName: 'Jane Smith',
     email: 'jane.smith@example.com',
-    phone: '+1-555-0123'
+    phone: '+1-555-0123',
+    address: '123 Art Street, San Francisco, CA 94102'
   },
-  shipping: {
-    address: '123 Art Street',
-    city: 'San Francisco',
-    state: 'CA',
-    zipCode: '94102',
-    country: 'United States'
-  },
-  payment: {
-    stripePaymentId: 'pi_1234567890',
-    amount: 785.00,
-    status: 'completed' as any
-  },
-  status: 'pending' as any,
+  query: 'Hello! I am interested in learning more about your artwork, particularly the landscape paintings. Could you please provide more information about pricing and availability? I am looking for a piece for my living room.',
+  status: 'new' as any,
   createdAt: new Date('2024-01-15T10:30:00Z'),
   updatedAt: new Date('2024-01-15T10:30:00Z')
-} as IOrder;
+} as IContact;
 
-// Generate preview HTML for order confirmation email
-export const generateOrderConfirmationPreview = (): string => {
-  const mockData: OrderConfirmationData = {
-    order: mockOrder,
-    subtotal: 770.00,
-    shippingCost: 15.00,
-    totalAmount: 785.00
-  };
-
-  return generateOrderConfirmationHTML(mockData);
+// Generate preview HTML for contact confirmation email (sent to customer)
+export const generateContactConfirmationPreview = (): string => {
+  return generateContactConfirmationHTML(mockContact);
 };
 
-// Generate preview HTML for order status update email
-export const generateOrderStatusUpdatePreview = (status: string = 'shipped'): string => {
-  const message = status === 'shipped' 
-    ? 'Great news! Your order has been shipped and is on its way to you.'
-    : 'Your order status has been updated.';
-
-  return generateOrderStatusUpdateHTML(mockOrder, status, message);
+// Generate preview HTML for contact notification email (sent to artist)
+export const generateContactNotificationPreview = (): string => {
+  return generateContactNotificationHTML(mockContact);
 };
 
 // Utility function to save preview HTML to file (for development testing)
@@ -87,16 +51,13 @@ export const saveEmailPreview = (html: string, filename: string): void => {
 // Generate all email previews
 export const generateAllPreviews = (): void => {
   try {
-    // Order confirmation preview
-    const confirmationHTML = generateOrderConfirmationPreview();
-    saveEmailPreview(confirmationHTML, 'order-confirmation');
+    // Contact confirmation preview (sent to customer)
+    const confirmationHTML = generateContactConfirmationPreview();
+    saveEmailPreview(confirmationHTML, 'contact-confirmation');
     
-    // Order status update previews
-    const statusUpdates = ['processing', 'shipped', 'delivered'];
-    statusUpdates.forEach(status => {
-      const statusHTML = generateOrderStatusUpdatePreview(status);
-      saveEmailPreview(statusHTML, `order-status-${status}`);
-    });
+    // Contact notification preview (sent to artist)
+    const notificationHTML = generateContactNotificationPreview();
+    saveEmailPreview(notificationHTML, 'contact-notification');
     
     console.log('All email previews generated successfully!');
   } catch (error) {
@@ -105,4 +66,4 @@ export const generateAllPreviews = (): void => {
 };
 
 // Export mock data for testing
-export { mockOrder };
+export { mockContact };

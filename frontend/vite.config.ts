@@ -20,9 +20,7 @@ export default defineConfig({
             if (id.includes('react') || id.includes('react-dom')) {
               return 'vendor-react';
             }
-            if (id.includes('@stripe') || id.includes('stripe')) {
-              return 'vendor-stripe';
-            }
+
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
             }
@@ -49,12 +47,7 @@ export default defineConfig({
             return 'gallery';
           }
           
-          // Checkout components chunk
-          if (id.includes('/components/Checkout') ||
-              id.includes('/components/Payment') ||
-              id.includes('/components/ShoppingCart')) {
-            return 'checkout';
-          }
+
         },
       },
     },
@@ -81,8 +74,7 @@ export default defineConfig({
       'react', 
       'react-dom', 
       'react/jsx-runtime',
-      '@stripe/react-stripe-js',
-      '@stripe/stripe-js',
+
       'lucide-react'
     ],
     exclude: ['@vite/client', '@vite/env'],

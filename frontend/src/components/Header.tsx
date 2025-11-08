@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 interface HeaderProps {
-  cartItemCount?: number;
-  onCartClick?: () => void;
   onHomeClick?: () => void;
   onGalleryClick?: () => void;
   onAboutClick?: () => void;
@@ -11,8 +9,6 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  cartItemCount = 0, 
-  onCartClick,
   onHomeClick,
   onGalleryClick,
   onAboutClick,
@@ -83,23 +79,8 @@ const Header: React.FC<HeaderProps> = ({
             ))}
           </nav>
 
-          {/* Cart and Mobile Menu Button */}
-          <div className="flex items-center space-x-4">
-            {/* Cart Button */}
-            <button
-              onClick={onCartClick}
-              className="relative p-2 text-text-dark hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-cream rounded-md"
-              aria-label={`Shopping cart with ${cartItemCount} items`}
-            >
-              <ShoppingBag className="h-6 w-6" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brown text-cream text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-                  {cartItemCount > 99 ? '99+' : cartItemCount}
-                </span>
-              )}
-            </button>
-
-            {/* Mobile Menu Button */}
+          {/* Mobile Menu Button */}
+          <div className="flex items-center">
             <button
               onClick={toggleMobileMenu}
               className="md:hidden p-2 text-text-dark hover:text-sage-green transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sage-green focus:ring-offset-2 focus:ring-offset-cream rounded-md"

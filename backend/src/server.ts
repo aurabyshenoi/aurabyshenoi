@@ -4,19 +4,20 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/database';
 import { logger } from './utils/logger';
 import paintingRoutes from './routes/paintings';
-import orderRoutes from './routes/orders';
+
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
-import paymentRoutes from './routes/payment';
+
 import contactRoutes from './routes/contact';
 import testimonialRoutes from './routes/testimonials';
 import healthRoutes from './routes/health';
+import newsletterRoutes from './routes/newsletter';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // CORS configuration
 const corsOptions = {
@@ -50,12 +51,13 @@ app.use('/api/health', healthRoutes);
 
 // API routes
 app.use('/api/paintings', paintingRoutes);
-app.use('/api/orders', orderRoutes);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/payment', paymentRoutes);
+
 app.use('/api/contact', contactRoutes);
 app.use('/api/testimonials', testimonialRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 
 // Error logging middleware
 app.use(logger.errorLogger());
@@ -93,15 +95,35 @@ app.get('/api/test-db', async (req, res) => {
 // Connect to MongoDB and start server
 const startServer = async () => {
   try {
-    await connectDB();
+    // Try to connect to database with retry logic
+    try {
+      logger.info('Initializing database connection...');
+      await connectDB(3, 5000); // 3 retries with 5 second delay
+      logger.info('Database connected successfully', {
+        connectionState: 'connected',
+        database: require('mongoose').connection.db?.databaseName || 'unknown'
+      });
+    } catch (dbError) {
+      logger.error('Database connection failed after all retries', dbError as Error);
+      logger.warn('Server will start but database-dependent features may not work');
+    }
     
     const server = app.listen(PORT, () => {
+      const mongoose = require('mongoose');
+      const dbConnected = mongoose.connection.readyState === 1;
+      
       logger.info(`AuraByShenoi server started`, {
         port: PORT,
         environment: process.env.NODE_ENV || 'development',
-        nodeVersion: process.version
+        nodeVersion: process.version,
+        databaseConnected: dbConnected,
+        databaseState: dbConnected ? 'connected' : 'disconnected'
       });
       logger.info(`Health check available at: http://localhost:${PORT}/health`);
+      
+      if (!dbConnected) {
+        logger.warn('Server started without database connection - some features may be unavailable');
+      }
     });
 
     // Graceful shutdown

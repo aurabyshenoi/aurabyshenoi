@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, FilterBar, PaintingGrid, PaintingModal } from './index';
 import { usePaintings } from '../hooks/usePaintings';
-import { useCart } from '../contexts/CartContext';
 import { Painting } from '../types/painting';
 import { preloadCriticalImages, preloadNextBatch, preloadOnScroll } from '../utils/imagePreloader';
 
@@ -10,9 +9,10 @@ interface GalleryProps {
   onAboutClick?: () => void;
   onHomeClick?: () => void;
   onContactClick?: () => void;
+  onArtworkInquiry?: (painting: Painting) => void;
 }
 
-const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeClick, onContactClick }) => {
+const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeClick, onContactClick, onArtworkInquiry }) => {
   const {
     paintings,
     loading,
@@ -23,7 +23,6 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
     priceRange
   } = usePaintings();
 
-  const { cart, toggleCart } = useCart();
   const [selectedPainting, setSelectedPainting] = useState<Painting | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -81,15 +80,9 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
 
 
 
-  const handleCartClick = () => {
-    toggleCart();
-  };
-
   if (error) {
     return (
       <Layout 
-        cartItemCount={cart.totalItems} 
-        onCartClick={handleCartClick}
         onHomeClick={onHomeClick}
         onAboutClick={onAboutClick}
         onContactClick={onContactClick}
@@ -108,8 +101,6 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
 
   return (
     <Layout 
-      cartItemCount={cart.totalItems} 
-      onCartClick={handleCartClick}
       onHomeClick={onHomeClick}
       onGalleryClick={() => {}}
       onAboutClick={onAboutClick}
@@ -166,6 +157,7 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
           <PaintingGrid
             paintings={paintings}
             onPaintingClick={handlePaintingClick}
+            onInquire={onArtworkInquiry}
             loading={loading}
           />
         </div>
@@ -175,6 +167,7 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
           painting={selectedPainting}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
+          onInquire={onArtworkInquiry}
         />
       </div>
     </Layout>
