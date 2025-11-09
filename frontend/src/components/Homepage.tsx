@@ -77,7 +77,7 @@ const Homepage: React.FC<HomepageProps> = ({ onGalleryClick, onAboutClick, onCon
     }
   };
 
-  // Handle newsletter form submission using FormSubmit.co
+  // Handle newsletter form submission
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -97,30 +97,10 @@ const Homepage: React.FC<HomepageProps> = ({ onGalleryClick, onAboutClick, onCon
       return;
     }
 
-    // Submit to FormSubmit.co for email notification
+    // Submit to API
     setNewsletterLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('email', trimmedEmail);
-      formData.append('_subject', 'New Newsletter Subscription');
-      formData.append('_template', 'box');
-      formData.append('_captcha', 'false');
-      formData.append('Subscriber Email', trimmedEmail);
-      formData.append('Subscription Date', new Date().toLocaleString());
-      formData.append('Source', 'Homepage');
-
-      const response = await fetch('https://formsubmit.co/aurabyshenoi@gmail.com', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to subscribe. Please try again.');
-      }
-
+      await subscribeToNewsletter(trimmedEmail);
       setNewsletterSuccess(true);
       setNewsletterEmail(''); // Reset form
     } catch (error) {

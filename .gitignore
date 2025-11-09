@@ -50,3 +50,6 @@ Thumbs.db
 backend/email-previews/
 # Local Netlify folder
 .netlify
+
+# Kiro specs
+.kiro/specs/
