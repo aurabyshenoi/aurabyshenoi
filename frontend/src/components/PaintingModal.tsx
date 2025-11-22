@@ -136,9 +136,20 @@ const PaintingModal: React.FC<PaintingModalProps> = ({
           <div className="lg:w-1/3 p-6 lg:p-8 overflow-y-auto">
             <div className="space-y-6">
               <div>
-                <h2 className="font-serif text-2xl lg:text-3xl text-text-dark mb-2">
-                  {painting.title}
-                </h2>
+                <div className="flex items-center gap-3 mb-2">
+                  {painting.index && (
+                    <div 
+                      className="bg-sage-green text-white px-3 py-1 rounded-md font-medium text-sm shadow-md"
+                      aria-label={`Artwork number ${painting.index}`}
+                      role="status"
+                    >
+                      #{painting.index}
+                    </div>
+                  )}
+                  <h2 className="font-serif text-2xl lg:text-3xl text-text-dark">
+                    {painting.title}
+                  </h2>
+                </div>
                 <p className="text-text-light text-lg">
                   {painting.medium}
                 </p>

@@ -17,6 +17,7 @@ export interface Painting {
   isAvailable: boolean;
   createdAt: string;
   updatedAt: string;
+  index?: number;
 }
 
 export interface PaintingFilters {

@@ -5,6 +5,7 @@ import Footer from './Footer';
 import ContactFormSubmit from './ContactFormSubmit';
 import ContactSuccess from './ContactSuccess';
 import { Painting } from '../types/painting';
+import { formatArtworkReference } from '../utils/artworkIndexing';
 
 interface ContactPageProps {
   onHomeClick: () => void;
@@ -72,7 +73,7 @@ const ContactPage: React.FC<ContactPageProps> = ({
             </button>
             
             <h1 className="text-4xl font-serif text-brown mb-4">
-              {artworkReference ? `Inquire About "${artworkReference.title}"` : 'Contact Us: Drop in your query and we will reach out to you'}
+              {artworkReference ? `Inquire About "${formatArtworkReference(artworkReference)}"` : 'Contact Us: Drop in your query and we will reach out to you'}
             </h1>
             <p className="text-lg text-text-light">
               {artworkReference 
@@ -90,7 +91,7 @@ const ContactPage: React.FC<ContactPageProps> = ({
                     className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                   />
                   <div>
-                    <h3 className="font-serif text-lg text-brown">{artworkReference.title}</h3>
+                    <h3 className="font-serif text-lg text-brown">{formatArtworkReference(artworkReference)}</h3>
                     <p className="text-text-light text-sm">{artworkReference.medium}</p>
                     <p className="text-text-light text-xs">
                       {artworkReference.dimensions.width}" × {artworkReference.dimensions.height}" {artworkReference.dimensions.unit}

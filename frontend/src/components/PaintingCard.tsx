@@ -16,7 +16,7 @@ const PaintingCard: React.FC<PaintingCardProps> = ({ painting, onClick, onInquir
       className="group cursor-pointer bg-cream rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
       onClick={() => onClick(painting)}
     >
-      <div className="aspect-square overflow-hidden bg-warm-gray">
+      <div className="aspect-square overflow-hidden bg-warm-gray relative">
         <OptimizedImage
           src={imageUrls.medium}
           lowQualitySrc={imageUrls.thumbnail}
@@ -26,6 +26,15 @@ const PaintingCard: React.FC<PaintingCardProps> = ({ painting, onClick, onInquir
           loading="lazy"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
+        {painting.index && (
+          <div 
+            className="absolute top-3 right-3 bg-sage-green text-white px-3 py-1 rounded-md font-medium text-sm shadow-md"
+            aria-label={`Artwork number ${painting.index}`}
+            role="status"
+          >
+            #{painting.index}
+          </div>
+        )}
       </div>
       
       <div className="p-6 space-y-3">

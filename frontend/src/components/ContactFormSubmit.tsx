@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { Painting } from '../types/painting';
+import { formatArtworkReference } from '../utils/artworkIndexing';
 
 interface ContactFormData {
   name: string;
@@ -37,9 +38,9 @@ const ContactFormSubmit: React.FC<ContactFormSubmitProps> = ({
     email: '',
     phone: '',
     message: artworkReference 
-      ? `I'm interested in learning more about "${artworkReference.title}". Please provide more information about this piece.`
+      ? `I'm interested in learning more about "${formatArtworkReference(artworkReference)}". Please provide more information about this piece.`
       : '',
-    artworkReference: artworkReference ? `${artworkReference.title} - ${artworkReference.medium} (${artworkReference.dimensions.width}" × ${artworkReference.dimensions.height}" ${artworkReference.dimensions.unit})` : undefined
+    artworkReference: artworkReference ? `${formatArtworkReference(artworkReference)} - ${artworkReference.medium} (${artworkReference.dimensions.width}" × ${artworkReference.dimensions.height}" ${artworkReference.dimensions.unit})` : undefined
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -389,9 +390,9 @@ const ContactFormSubmit: React.FC<ContactFormSubmitProps> = ({
       email: '',
       phone: '',
       message: artworkReference 
-        ? `I'm interested in learning more about "${artworkReference.title}". Please provide more information about this piece.`
+        ? `I'm interested in learning more about "${formatArtworkReference(artworkReference)}". Please provide more information about this piece.`
         : '',
-      artworkReference: artworkReference ? `${artworkReference.title} - ${artworkReference.medium} (${artworkReference.dimensions.width}" × ${artworkReference.dimensions.height}" ${artworkReference.dimensions.unit})` : undefined
+      artworkReference: artworkReference ? `${formatArtworkReference(artworkReference)} - ${artworkReference.medium} (${artworkReference.dimensions.width}" × ${artworkReference.dimensions.height}" ${artworkReference.dimensions.unit})` : undefined
     });
     setErrors({});
   };
@@ -517,7 +518,7 @@ const ContactFormSubmit: React.FC<ContactFormSubmitProps> = ({
         {artworkReference && (
           <div className="mt-3 p-3 bg-sage-green bg-opacity-10 border border-sage-green border-opacity-20 rounded-md">
             <p className="text-sm text-sage-green-dark font-medium">
-              Inquiring about: {artworkReference.title}
+              Inquiring about: {formatArtworkReference(artworkReference)}
             </p>
           </div>
         )}

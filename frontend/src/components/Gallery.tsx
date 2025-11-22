@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Layout, FilterBar, PaintingGrid, PaintingModal } from './index';
 import { usePaintings } from '../hooks/usePaintings';
 import { Painting } from '../types/painting';
 import { preloadCriticalImages, preloadNextBatch, preloadOnScroll } from '../utils/imagePreloader';
+import { assignIndices } from '../utils/artworkIndexing';
 
 interface GalleryProps {
   onAdminAccess?: () => void;
@@ -26,17 +27,22 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
   const [selectedPainting, setSelectedPainting] = useState<Painting | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Assign indices to paintings whenever the paintings list changes
+  const indexedPaintings = useMemo(() => {
+    return assignIndices(paintings);
+  }, [paintings]);
+
   // Preload critical images when paintings load
   useEffect(() => {
-    if (paintings.length > 0 && !loading) {
-      preloadCriticalImages(paintings, 6);
+    if (indexedPaintings.length > 0 && !loading) {
+      preloadCriticalImages(indexedPaintings, 6);
       
       // Preload next batch after a delay
       setTimeout(() => {
-        preloadNextBatch(paintings, 6, 6);
+        preloadNextBatch(indexedPaintings, 6, 6);
       }, 2000);
     }
-  }, [paintings, loading]);
+  }, [indexedPaintings, loading]);
 
   // Preload images based on scroll position
   useEffect(() => {
@@ -47,9 +53,9 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
       
       // Calculate approximate visible painting index based on scroll position
       const scrollPercentage = scrollPosition / (documentHeight - windowHeight);
-      const visibleIndex = Math.floor(scrollPercentage * paintings.length);
+      const visibleIndex = Math.floor(scrollPercentage * indexedPaintings.length);
       
-      preloadOnScroll(paintings, visibleIndex);
+      preloadOnScroll(indexedPaintings, visibleIndex);
     };
 
     // Throttle scroll events
@@ -66,7 +72,7 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
 
     window.addEventListener('scroll', throttledScroll, { passive: true });
     return () => window.removeEventListener('scroll', throttledScroll);
-  }, [paintings]);
+  }, [indexedPaintings]);
 
   const handlePaintingClick = (painting: Painting) => {
     setSelectedPainting(painting);
@@ -132,30 +138,21 @@ const Gallery: React.FC<GalleryProps> = ({ onAdminAccess, onAboutClick, onHomeCl
 
         {/* Gallery Content */}
         <div className="container mx-auto px-4 py-8">
-          {/* Results Summary and Admin Access */}
-          <div className="flex justify-between items-center mb-6">
+          {/* Results Summary */}
+          <div className="mb-6">
             {!loading && (
               <p className="text-text-light">
-                {paintings.length === 0 
+                {indexedPaintings.length === 0 
                   ? 'No paintings found'
-                  : `Showing ${paintings.length} painting${paintings.length !== 1 ? 's' : ''}`
+                  : `Showing ${indexedPaintings.length} painting${indexedPaintings.length !== 1 ? 's' : ''}`
                 }
               </p>
-            )}
-            
-            {onAdminAccess && (
-              <button
-                onClick={onAdminAccess}
-                className="text-sm text-gray-500 hover:text-sage-green transition-colors duration-200"
-              >
-                Admin
-              </button>
             )}
           </div>
 
           {/* Painting Grid */}
           <PaintingGrid
-            paintings={paintings}
+            paintings={indexedPaintings}
             onPaintingClick={handlePaintingClick}
             onInquire={onArtworkInquiry}
             loading={loading}
