@@ -35,7 +35,7 @@ Before adding new records, you need to remove any existing A or CNAME records fo
 3. Fill in:
    - **Type**: Select **A**
    - **Name**: Type **@** (this means root domain)
-   - **Value**: Type **76.76.21.21**
+   - **Value**: Type **216.198.79.1**
    - **TTL**: Select **1 Hour** (or leave as default)
 4. Click **Save**
 
@@ -45,7 +45,7 @@ Before adding new records, you need to remove any existing A or CNAME records fo
 2. Fill in:
    - **Type**: Select **CNAME**
    - **Name**: Type **www**
-   - **Value**: Type **cname.vercel-dns.com**
+   - **Value**: Type **b65634b8f144b946.vercel-dns-017.com**
    - **TTL**: Select **1 Hour** (or leave as default)
 3. Click **Save**
 
@@ -60,10 +60,10 @@ Before adding new records, you need to remove any existing A or CNAME records fo
 ## Your Final DNS Records Should Look Like This:
 
 ```
-Type    Name    Value                   TTL
-----    ----    -----                   ---
-A       @       76.76.21.21            1 Hour
-CNAME   www     cname.vercel-dns.com   1 Hour
+Type    Name    Value                                TTL
+----    ----    -----                                ---
+A       @       216.198.79.1                        1 Hour
+CNAME   www     b65634b8f144b946.vercel-dns-017.com 1 Hour
 ```
 
 ---
@@ -101,7 +101,7 @@ After saving, wait 5-10 minutes, then check:
 2. Enter: `aurabyshenoi.com`
 3. Select: **A**
 4. Click **Search**
-5. You should see **76.76.21.21** in results
+5. You should see **216.198.79.1** in results
 
 **Option 2: Command Line**
 ```bash
@@ -139,8 +139,8 @@ nslookup www.aurabyshenoi.com
 ### "Invalid value" error
 
 - Make sure there are no extra spaces
-- For A record: exactly `76.76.21.21`
-- For CNAME: exactly `cname.vercel-dns.com`
+- For A record: exactly `216.198.79.1`
+- For CNAME: exactly `b65634b8f144b946.vercel-dns-017.com`
 - No http:// or https:// prefix
 
 ### DNS not propagating
@@ -170,8 +170,8 @@ nslookup www.aurabyshenoi.com
 
 **Records to add:**
 ```
-A       @       76.76.21.21
-CNAME   www     cname.vercel-dns.com
+A       @       216.198.79.1
+CNAME   www     b65634b8f144b946.vercel-dns-017.com
 ```
 
 **Check DNS:**
